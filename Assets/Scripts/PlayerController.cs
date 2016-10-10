@@ -16,7 +16,7 @@ public class PlayerController : MonoBehaviour
 
     float vSpeed;
     float gravity = 9.8f;
-    float speedMult = 10;
+    float speedMult = 5;
 
     float mouseSensitivity = 1;
 
@@ -37,7 +37,8 @@ public class PlayerController : MonoBehaviour
         if (controller.isGrounded)
             vSpeed = 0;
 
-        vSpeed -= gravity * Time.deltaTime;
+        vSpeed -= gravity * Time.deltaTime * 0.1f;
+        vSpeed = Mathf.Clamp(vSpeed, -54, 54);
         move.y = vSpeed;
         //float x = speedSlope.Evaluate(Mathf.Abs(f)) * Time.deltaTime;
         //float y = speedSlope.Evaluate(Input.GetAxis("Vertical")) * Time.deltaTime;
