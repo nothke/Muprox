@@ -22,8 +22,19 @@ public class TextureGen : MonoBehaviour
 
         material.mainTexture = texture;
         material.SetTexture("_BumpMap", normalTexture);
-        //material.SetTexture("_MetallicGlossMap", smoothTexture);
+        material.SetTexture("_MetallicGlossMap", smoothTexture);
 
+        //StartCoroutine(AfterFrame());
+    }
+
+    IEnumerator AfterFrame()
+    {
+        yield return null;
+        yield return null;
+        yield return null;
+        yield return null;
+        yield return null;
+        material.SetTexture("_BumpMap", normalTexture);
     }
 
     int size = 256;
@@ -36,6 +47,7 @@ public class TextureGen : MonoBehaviour
         normalTexture = Init();
         smoothTexture = Init();
 
+
         // ALBEDO
 
         TrueNoise(texture, baseColor, noiseColor);
@@ -47,8 +59,12 @@ public class TextureGen : MonoBehaviour
 
         // NORMAL
 
-        //Fill(normalTexture, new Color(0.5f, 0.5f, 1));
-        TrueNoise(normalTexture, new Color(0.45f, 0.45f, 1), new Color(0.55f, 0.55f, 1));
+        float noiseDisp = 0.05f;
+        float d1 = 0.5f - noiseDisp;
+        float d2 = 0.5f + noiseDisp;
+
+        //Fill(normalTexture, new Color(0.5f, 0.5f, 0.5f));
+        TrueNoise(normalTexture, new Color(d1, d1, 0), new Color(d2, d2, 0));
         Grid(normalTexture, new Color(0.5f, 0.6f, 1), 10, 10, true, true, false);
         Grid(normalTexture, new Color(0.6f, 0.5f, 1), 10, 10, true, false, true);
         ToNormal(normalTexture);
@@ -72,7 +88,7 @@ public class TextureGen : MonoBehaviour
 
     Texture2D Init()
     {
-        Texture2D texture = new Texture2D(size, size);
+        Texture2D texture = new Texture2D(size, size, TextureFormat.ARGB32, true);
         texture.filterMode = FilterMode.Point;
 
         return texture;
@@ -80,17 +96,18 @@ public class TextureGen : MonoBehaviour
 
     void ToNormal(Texture2D tex)
     {
-        Color32[] colours = tex.GetPixels32();
+        Color[] colours = tex.GetPixels();
         for (int i = 0; i < colours.Length; i++)
         {
-            Color32 c = colours[i];
+            Color c = colours[i];
             c.a = c.r;
             c.r = c.b = c.g;
+            //c.r = c.b = 0;
             colours[i] = c;
         }
 
-        tex.SetPixels32(colours);
-        tex.Apply();
+        tex.SetPixels(colours);
+        //tex.Apply();
     }
 
     void Fill(Texture2D tex, Color color)
