@@ -66,7 +66,7 @@ namespace UnityStandardAssets.ImageEffects
             return isSupported;
         }
 
-//        [ImageEffectOpaque]
+        [ImageEffectOpaque]
         void OnRenderImage (RenderTexture source, RenderTexture destination)
 		{
             if (CheckResources()==false || (!distanceFog && !heightFog))

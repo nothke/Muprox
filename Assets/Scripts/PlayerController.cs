@@ -5,15 +5,18 @@ using UnityEngine.UI;
 
 public class PlayerController : NetworkBehaviour
 {
-    [SyncVar]
+    //[SyncVar(hook = "CmdOnNickChange")]
     public string nick;
-
+    string prevNick;
 
     public Transform head;
 
     CharacterController controller;
 
     public Text chat;
+
+    public GameObject bulletPrefab;
+    public Transform gunpoint;
 
     void Start()
     {
@@ -26,7 +29,7 @@ public class PlayerController : NetworkBehaviour
     public AnimationCurve speedSlope;
 
     float vSpeed;
-    float gravity = 9.8f;
+    float gravity = 20;
     float speedMult = 5;
 
     float mouseSensitivity = 1;
@@ -35,9 +38,36 @@ public class PlayerController : NetworkBehaviour
 
     public Component[] componentsToDisable;
 
-    void Update()
+
+
+    //[Command]
+    void OnNickChange(string _nick)
+    {
+        chat.text = _nick;
+    }
+
+    [Command]
+    void CmdChangeNick()
     {
         chat.text = nick;
+    }
+
+    [Command]
+    void CmdFire()
+    {
+        var bullet = Instantiate(bulletPrefab, gunpoint.position, gunpoint.rotation) as GameObject;
+
+        NetworkServer.Spawn(bullet);
+
+        bullet.GetComponent<Rigidbody>().AddForce(gunpoint.forward * 1000);
+    }
+
+    void Update()
+    {
+        if (prevNick != nick)
+            CmdChangeNick();
+
+        prevNick = nick;
 
         if (!isLocalPlayer)
             return;
@@ -47,15 +77,23 @@ public class PlayerController : NetworkBehaviour
 
         Vector3 iVec = new Vector3(iH, 0, iV);
 
-        Vector3 move = iVec.normalized * speedSlope.Evaluate(iVec.magnitude) * speedMult * Time.deltaTime;
+        Vector3 move = iVec.normalized * speedSlope.Evaluate(iVec.magnitude) * speedMult;// * Time.deltaTime;
 
         move = transform.forward * move.z + transform.right * move.x;
 
         // vertical speed
+
+
+
         if (controller.isGrounded)
+        {
             vSpeed = 0;
 
-        vSpeed -= gravity * Time.deltaTime * 0.1f;
+            if (Input.GetKeyDown(KeyCode.Space))
+                vSpeed = 8;
+        }
+
+        vSpeed -= gravity * Time.deltaTime;
         vSpeed = Mathf.Clamp(vSpeed, -54, 54);
         move.y = vSpeed;
         //float x = speedSlope.Evaluate(Mathf.Abs(f)) * Time.deltaTime;
@@ -63,7 +101,7 @@ public class PlayerController : NetworkBehaviour
 
         //Vector3 move = new Vector3(x, 0, y);
 
-        controller.Move(move);
+        controller.Move(move * Time.deltaTime);
 
         // MOUSELOOK
         float rotX = Input.GetAxis("Mouse X") * mouseSensitivity;
@@ -77,6 +115,9 @@ public class PlayerController : NetworkBehaviour
 
         head.localRotation = yQuaternion;
         transform.localRotation = xQuaternion;
+
+        if (Input.GetMouseButtonDown(0))
+            CmdFire();
     }
 
     void OnGUI()
