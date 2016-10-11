@@ -22,9 +22,14 @@ public class Flyer : MonoBehaviour
     public Transform turret;
     public Transform turretTarget;
 
+    public RayWeapon weapon;
+
+    float cooldown;
 
     void Update()
     {
+
+
         if (turret)
         {
             if (turretTarget)
@@ -38,13 +43,47 @@ public class Flyer : MonoBehaviour
         }
 
         if (LED)
+            UpdateLEDColor();
+
+        if (weapon)
         {
 
-            Color curCol = Color.Lerp(Color.black, Color.red, Mathf.Sin(Time.time * 10) * 10);
+            cooldown -= Time.deltaTime;
 
-            LED.material.SetColor("_EmissionColor", curCol);
-
+            if (TargetIsInView() && GunIsReady())
+                TryShoot();
         }
+    }
+
+    void UpdateLEDColor()
+    {
+        Color curCol = Color.Lerp(Color.black, Color.red, Mathf.Sin(Time.time * 10) * 10);
+
+        LED.material.SetColor("_EmissionColor", curCol);
+    }
+
+    bool GunIsReady()
+    {
+        return cooldown < 0;
+    }
+
+    bool TargetIsInView()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(turret.position, turret.forward, out hit, Mathf.Infinity))
+        {
+            if (hit.collider.gameObject == turretTarget.gameObject) return true;
+
+            Debug.Log(hit.collider.name);
+        }
+
+        return false;
+    }
+
+    void TryShoot()
+    {
+        weapon.Shoot();
+        cooldown = 1;
     }
 
     void FixedUpdate()
