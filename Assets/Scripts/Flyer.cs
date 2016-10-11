@@ -15,10 +15,55 @@ public class Flyer : MonoBehaviour
     public float maxForce = 1;
 
     public Renderer LED;
+    public Light LEDLight;
+
+    public float lookAheadDistance = 4;
+    public float immediateDistance = 1;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+
+        StartCoroutine(Patrol());
+    }
+
+    IEnumerator Patrol()
+    {
+        while (true)
+        {
+            seekPos = Random.insideUnitSphere * 100;
+
+            seekPos.y = Random.Range(1, 10);
+
+
+
+            turretTarget = GetRandomBox();
+
+            yield return new WaitForSeconds(10);
+
+        }
+    }
+
+    Transform GetRandomBox()
+    {
+        Transform[] all = FindObjectsOfType(typeof(Transform)) as Transform[];
+
+        Transform t = null;
+
+        int tst = 0;
+
+        do
+        {
+            t = all[Random.Range(0, all.Length)];
+
+            tst++;
+
+            if (tst > 100) break;
+
+        } while (!t.name.StartsWith("Canonball"));
+
+
+        return t;
     }
 
     public Transform turret;
@@ -62,6 +107,9 @@ public class Flyer : MonoBehaviour
         Color curCol = Color.Lerp(Color.black, Color.red, Mathf.Sin(Time.time * 10) * 10);
 
         LED.material.SetColor("_EmissionColor", curCol);
+
+        if (LEDLight)
+            LEDLight.color = curCol;
     }
 
     bool GunIsReady()
@@ -71,6 +119,8 @@ public class Flyer : MonoBehaviour
 
     bool TargetIsInView()
     {
+        if (!turretTarget) return false;
+
         RaycastHit hit;
         if (Physics.Raycast(turret.position, turret.forward, out hit, Mathf.Infinity))
         {
@@ -84,7 +134,7 @@ public class Flyer : MonoBehaviour
 
     void TryShoot()
     {
-        weapon.Shoot();
+        weapon.RpcShoot();
         cooldown = 1;
     }
 
@@ -92,8 +142,8 @@ public class Flyer : MonoBehaviour
     {
 
         Vector3 seekDir = seekPos - transform.position;
-        Vector3 targetDir = Vector3.ClampMagnitude(seekDir, 8);
-        float targetDist = targetDir.magnitude;
+        Vector3 targetDir = Vector3.ClampMagnitude(seekDir, immediateDistance);
+        float targetDist = Vector3.ClampMagnitude(seekDir, lookAheadDistance).magnitude;
 
         RaycastHit hit;
         if (Physics.Raycast(transform.position, seekDir, out hit, targetDist))
@@ -103,6 +153,7 @@ public class Flyer : MonoBehaviour
             Vector3 reflectedPoint = hit.point + reflectedDir;
 
             targetPos = reflectedPoint;
+
             Debug.DrawLine(transform.position, targetPos, Color.red);
             //transform.position - targetDir;
         }
@@ -118,8 +169,6 @@ public class Flyer : MonoBehaviour
     {
         if (target)
             seekPos = target.position;
-        else
-            seekPos = transform.position;
 
         CalculateImmediateTarget();
 
@@ -129,8 +178,11 @@ public class Flyer : MonoBehaviour
 
         //if (rb.velocity.magnitude < maxSpeed)
         //rb.AddForce(transform.up * -Physics.gravity.y + force);
-        rb.AddRelativeForce(Vector3.up * -Physics.gravity.y + force);
+        //rb.AddRelativeForce(Vector3.up * -Physics.gravity.y + force);
+        if (rb.velocity.magnitude > 5)
+            force = Vector3.zero;
 
+        rb.AddForce(transform.up * -Physics.gravity.y + force);
 
     }
 }

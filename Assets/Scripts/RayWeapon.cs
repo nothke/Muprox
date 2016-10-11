@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.Networking;
 
-public class RayWeapon : MonoBehaviour
+public class RayWeapon : NetworkBehaviour
 {
     public float recoilForce = 0;
     public float hitForce = 200;
@@ -11,7 +12,8 @@ public class RayWeapon : MonoBehaviour
 
     public int ammo = 64;
 
-    public void Shoot()
+    [ClientRpc]
+    public void RpcShoot()
     {
         RaycastHit hit;
         if (Physics.Raycast(transform.position, transform.forward, out hit, Mathf.Infinity))
