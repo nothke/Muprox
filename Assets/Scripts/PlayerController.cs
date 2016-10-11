@@ -1,15 +1,26 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.Networking;
+using UnityEngine.UI;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : NetworkBehaviour
 {
+    [SyncVar]
+    public string nick;
+
+
     public Transform head;
 
     CharacterController controller;
 
+    public Text chat;
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
+
+        if (!isLocalPlayer)
+            DisableCamera();
     }
 
     public AnimationCurve speedSlope;
@@ -22,8 +33,15 @@ public class PlayerController : MonoBehaviour
 
     float totalX, totalY;
 
+    public Component[] componentsToDisable;
+
     void Update()
     {
+        chat.text = nick;
+
+        if (!isLocalPlayer)
+            return;
+
         float iH = Input.GetAxis("Horizontal");
         float iV = Input.GetAxis("Vertical");
 
@@ -59,5 +77,24 @@ public class PlayerController : MonoBehaviour
 
         head.localRotation = yQuaternion;
         transform.localRotation = xQuaternion;
+    }
+
+    void OnGUI()
+    {
+        if (!isLocalPlayer) return;
+
+        nick = GUI.TextField(new Rect(10, 200, 100, 30), nick);
+    }
+
+
+    void DisableCamera()
+    {
+        if (componentsToDisable.Length == 0) return;
+
+        for (int i = 0; i < componentsToDisable.Length; i++)
+        {
+            if (componentsToDisable[i] != null)
+                Destroy(componentsToDisable[i]);
+        }
     }
 }
