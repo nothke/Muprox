@@ -10,6 +10,8 @@ public class Flyer : MonoBehaviour
     public Transform target;
     public Vector3 targetPos;
 
+    public Vector3 seekPos;
+
     public float maxForce = 1;
 
     public Renderer LED;
@@ -86,12 +88,40 @@ public class Flyer : MonoBehaviour
         cooldown = 1;
     }
 
+    void CalculateImmediateTarget()
+    {
+
+        Vector3 seekDir = seekPos - transform.position;
+        Vector3 targetDir = Vector3.ClampMagnitude(seekDir, 8);
+        float targetDist = targetDir.magnitude;
+
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, seekDir, out hit, targetDist))
+        {
+            Vector3 reflectedDir = Vector3.Reflect(targetDir, hit.normal);
+
+            Vector3 reflectedPoint = hit.point + reflectedDir;
+
+            targetPos = reflectedPoint;
+            Debug.DrawLine(transform.position, targetPos, Color.red);
+            //transform.position - targetDir;
+        }
+        else
+        {
+            targetPos = transform.position + targetDir;
+            Debug.DrawLine(transform.position, targetPos, Color.white);
+        }
+
+    }
+
     void FixedUpdate()
     {
         if (target)
-            targetPos = target.position;
+            seekPos = target.position;
         else
-            targetPos = transform.position;
+            seekPos = transform.position;
+
+        CalculateImmediateTarget();
 
         Vector3 force = pid.Update(targetPos, transform.position, Time.deltaTime);
 
