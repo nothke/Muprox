@@ -18,6 +18,8 @@ public class PlayerController : NetworkBehaviour
     public GameObject bulletPrefab;
     public Transform gunpoint;
 
+    public Weapon weapon;
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
@@ -55,11 +57,16 @@ public class PlayerController : NetworkBehaviour
     [Command]
     void CmdFire()
     {
+        if (!weapon) return;
+
+        weapon.CmdFire();
+
+        /*
         var bullet = Instantiate(bulletPrefab, gunpoint.position, gunpoint.rotation) as GameObject;
 
         NetworkServer.Spawn(bullet);
 
-        bullet.GetComponent<Rigidbody>().AddForce(gunpoint.forward * 1000);
+        bullet.GetComponent<Rigidbody>().AddForce(gunpoint.forward * 1000);*/
     }
 
     void Update()
