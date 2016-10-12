@@ -71,8 +71,8 @@ public class PlayerController : NetworkBehaviour
 
     void Update()
     {
-        if (prevNick != nick)
-            CmdChangeNick();
+        //if (prevNick != nick)
+            //CmdChangeNick();
 
         prevNick = nick;
 
@@ -127,12 +127,13 @@ public class PlayerController : NetworkBehaviour
             CmdFire();
     }
 
+    /*
     void OnGUI()
     {
         if (!isLocalPlayer) return;
 
         nick = GUI.TextField(new Rect(10, 200, 100, 30), nick);
-    }
+    }*/
 
 
     void DisableCamera()
