@@ -20,6 +20,8 @@ public class Flyer : MonoBehaviour
     public float lookAheadDistance = 4;
     public float immediateDistance = 1;
 
+    public LayerMask raycastMask;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -122,7 +124,7 @@ public class Flyer : MonoBehaviour
         if (!turretTarget) return false;
 
         RaycastHit hit;
-        if (Physics.Raycast(turret.position, turret.forward, out hit, Mathf.Infinity))
+        if (Physics.Raycast(turret.position, turret.forward, out hit, Mathf.Infinity, raycastMask))
         {
             if (hit.collider.gameObject == turretTarget.gameObject) return true;
         }
@@ -145,7 +147,7 @@ public class Flyer : MonoBehaviour
         float targetDist = Vector3.ClampMagnitude(seekDir, lookAheadDistance).magnitude;
 
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, seekDir, out hit, targetDist))
+        if (Physics.Raycast(transform.position, seekDir, out hit, targetDist, raycastMask))
         {
             Vector3 reflectedDir = Vector3.Reflect(targetDir, hit.normal);
 

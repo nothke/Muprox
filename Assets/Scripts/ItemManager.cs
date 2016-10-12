@@ -33,7 +33,7 @@ public class ItemManager : NetworkBehaviour
                     {
                         if (Input.GetMouseButtonDown(1))
                         {
-                            CmdDestroyWeapon();
+                            CmdDestroyWeapon(hit.collider.gameObject);
                         }
                     }
 
@@ -45,15 +45,26 @@ public class ItemManager : NetworkBehaviour
     }
 
     [Command]
-    void CmdDestroyWeapon()
+    void CmdDestroyWeapon(GameObject weaponGO)
     {
-        RpcDestroyWeapon();
+        Destroy(weaponGO.GetComponent<NetworkTransform>());
+
+        //weaponGO.GetComponent<>
+
+        //Destroy(weaponGO);
+        //RpcDestroyWeapon();
     }
 
     [ClientRpc]
     void RpcDestroyWeapon()
     {
         Destroy(hoverWeapon.gameObject);
+    }
+
+    [ClientRpc]
+    void RpcTakeWeapon()
+    {
+
     }
 
     [Command]

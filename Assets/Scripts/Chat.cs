@@ -8,27 +8,47 @@ public class Chat : NetworkBehaviour
 
     public string nick = "playerName";
 
-    public string message;
+    string message = "";
 
-    public static string[] messages = new string[10];
-    public static Queue<string> messageQueue = new Queue<string>();
+    static Queue<string> messageQueue = new Queue<string>();
 
     void OnGUI()
     {
         if (!isLocalPlayer) return;
 
-        if (Event.current.Equals(Event.KeyboardEvent("return")))
+        GUILayout.BeginArea(new Rect(10, 200, 300, 1000));
+
+        GUI.color = Color.white;
+
+        if (Event.current.Equals(Event.KeyboardEvent("return")) && !string.IsNullOrEmpty(message))
         {
             CmdSendChat(nick + ": " + message);
             message = "";
         }
 
-        nick = GUI.TextField(new Rect(10, 200, 100, 30), nick);
-        message = GUI.TextField(new Rect(10, 250, 200, 30), message);
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("Nick");
+        nick = GUILayout.TextField(nick, GUILayout.Width(200));
+        GUILayout.EndHorizontal();
 
-        GUI.Label(new Rect(10, 300, 200, 1000), Convert(messageQueue));
+        message = GUILayout.TextField(message);
 
+        foreach (var line in messageQueue)
+        {
+            GUI.color = HashColor(line.Split(':')[0]);
+            GUILayout.Label(line);
+        }
 
+        GUILayout.EndArea();
+
+    }
+
+    Color HashColor(string str)
+    {
+        System.Random rnd = new System.Random(str.GetHashCode());
+        float hue = (float)rnd.NextDouble();
+
+        return Color.HSVToRGB(Mathf.Clamp01(hue), 0.7f, 1);
     }
 
     [Command]

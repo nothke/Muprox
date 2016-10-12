@@ -57,22 +57,34 @@ public class PlayerController : NetworkBehaviour
     [Command]
     void CmdFire()
     {
-        if (!weapon) return;
+        //if (!weapon) return;
 
-        weapon.CmdFire();
+        //weapon.CmdFire();
 
-        /*
+
         var bullet = Instantiate(bulletPrefab, gunpoint.position, gunpoint.rotation) as GameObject;
 
         NetworkServer.Spawn(bullet);
 
-        bullet.GetComponent<Rigidbody>().AddForce(gunpoint.forward * 1000);*/
+        bullet.GetComponent<Rigidbody>().AddForce(gunpoint.forward * 1000);
+    }
+
+    [Command]
+    void CmdPush(GameObject go, Vector3 point, Vector3 direction)
+    {
+        Rigidbody _rigidbody = go.GetComponent<Rigidbody>();
+
+        if (_rigidbody)
+            _rigidbody.AddForceAtPosition(direction * 1000, point);
+
+
+
     }
 
     void Update()
     {
         //if (prevNick != nick)
-            //CmdChangeNick();
+        //CmdChangeNick();
 
         prevNick = nick;
 
@@ -123,8 +135,36 @@ public class PlayerController : NetworkBehaviour
         head.localRotation = yQuaternion;
         transform.localRotation = xQuaternion;
 
+
         if (Input.GetMouseButtonDown(0))
             CmdFire();
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(head.position, head.forward, out hit, Mathf.Infinity))
+            {
+                Rigidbody rb = hit.collider.GetComponent<Rigidbody>();
+
+                Transform lastParent = hit.collider.transform;
+                lastParent = hit.collider.transform.parent;
+
+                for (int i = 0; i < 100; i++)
+                {
+                    if (rb) break;
+                    if (!lastParent) break;
+
+                    rb = lastParent.GetComponent<Rigidbody>();
+                    lastParent = lastParent.parent;
+                }
+
+                if (rb)
+                {
+                    Debug.Log("Pushing: " + rb.gameObject.name);
+                    CmdPush(rb.gameObject, hit.point, head.forward);
+                }
+            }
+        }
     }
 
     /*
