@@ -4,10 +4,10 @@ using UnityEngine.SceneManagement;
 
 public class AppUtil : MonoBehaviour
 {
-
+    public bool canRestart;
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Tab))
+        if (canRestart && Input.GetKeyDown(KeyCode.Tab))
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
 
         if (Input.GetKeyDown(KeyCode.LeftControl))
