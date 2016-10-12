@@ -60,7 +60,7 @@ public class Flyer : MonoBehaviour
 
             if (tst > 100) break;
 
-        } while (!t.name.StartsWith("Canonball"));
+        } while (!t.name.StartsWith("Canonball") && !t.name.StartsWith("Player"));
 
 
         return t;
@@ -125,8 +125,6 @@ public class Flyer : MonoBehaviour
         if (Physics.Raycast(turret.position, turret.forward, out hit, Mathf.Infinity))
         {
             if (hit.collider.gameObject == turretTarget.gameObject) return true;
-
-            Debug.Log(hit.collider.name);
         }
 
         return false;
@@ -134,7 +132,8 @@ public class Flyer : MonoBehaviour
 
     void TryShoot()
     {
-        weapon.RpcShoot();
+        weapon.Shoot();
+
         cooldown = 1;
     }
 

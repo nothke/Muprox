@@ -10,7 +10,17 @@ public class RayWeapon : NetworkBehaviour
     public ParticleSystem nozzleParticles;
     public int emitParticles = 30;
 
+    [SyncVar]
     public int ammo = 64;
+
+    public void Shoot()
+    {
+        if (nozzleParticles)
+            nozzleParticles.Emit(emitParticles);
+
+        if (Network.isServer)
+            RpcShoot();
+    }
 
     [ClientRpc]
     public void RpcShoot()
@@ -23,9 +33,6 @@ public class RayWeapon : NetworkBehaviour
 
             Debug.Log("Shot: " + hit.collider.name);
         }
-
-        if (nozzleParticles)
-            nozzleParticles.Emit(emitParticles);
 
         ammo--;
     }
