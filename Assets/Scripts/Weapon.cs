@@ -55,7 +55,8 @@ public class Weapon : MonoBehaviour
 
         if (fireShot)
         {
-            AudioSource.PlayClipAtPoint(fireShot, transform.position);
+            fireShot.PlayOnce(transform.position);
+            //AudioSource.PlayClipAtPoint(fireShot, transform.position);
 
             PoolingManager.e.PlayTail(transform.position);
         }

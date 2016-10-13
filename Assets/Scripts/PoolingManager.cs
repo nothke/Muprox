@@ -20,7 +20,6 @@ public class PoolingManager : MonoBehaviour
 
     public void PlayTail(Vector3 point)
     {
-        AudioSource.PlayClipAtPoint(tail, point);
+        tail.PlayOnce(point, 0.7f, 1, 150, 4);
     }
-
 }
