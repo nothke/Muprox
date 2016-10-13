@@ -62,14 +62,14 @@ public class ItemManager : NetworkBehaviour
             if (!hoverWeapon) return;
 
             if (Input.GetMouseButtonDown(1))
-                ParentTake(hoverWeapon);
+                Take(hoverWeapon);
         }
 
     }
 
     Vector3 handAimPos = new Vector3(0, -0.1f, 0.5f);
 
-    void ParentTake(Weapon _weapon)
+    void Take(Weapon _weapon)
     {
         if (weapon)
         {
@@ -104,6 +104,7 @@ public class ItemManager : NetworkBehaviour
         _weapon.GetComponent<Parentable>().parentNetId = id;
 
         PositionWeaponAtHand(_weapon.GetComponent<Weapon>());
+        _weapon.GetComponent<NetworkTransform>().enabled = false;
         DisablePhysics(_weapon.GetComponent<Weapon>());
 
         Debug.Log("Command Set Parent to " + id);
@@ -117,6 +118,7 @@ public class ItemManager : NetworkBehaviour
     void RpcSetParent(GameObject _weapon)
     {
         PositionWeaponAtHand(_weapon.GetComponent<Weapon>());
+        _weapon.GetComponent<NetworkTransform>().enabled = false;
         DisablePhysics(_weapon.GetComponent<Weapon>());
     }
 
@@ -124,6 +126,7 @@ public class ItemManager : NetworkBehaviour
     void CmdNullifyParent(GameObject _weapon)
     {
         _weapon.GetComponent<Parentable>().parentNetId = new NetworkInstanceId(0);
+        _weapon.GetComponent<NetworkTransform>().enabled = true;
 
         RpcNullifyParent(_weapon);
     }
@@ -133,6 +136,7 @@ public class ItemManager : NetworkBehaviour
     {
         _weapon.transform.parent = null;
         EnablePhysics(_weapon.GetComponent<Weapon>());
+        _weapon.GetComponent<NetworkTransform>().enabled = true;
     }
 
 
@@ -213,8 +217,7 @@ public class ItemManager : NetworkBehaviour
     [ClientRpc]
     void RpcGunFire(GameObject _weapon)
     {
-        //if (!isClient)
-            _weapon.GetComponent<Weapon>().Fire();
+        _weapon.GetComponent<Weapon>().Fire();
     }
 
     void ShootRay(Weapon _weapon)
