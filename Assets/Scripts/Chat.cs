@@ -5,12 +5,28 @@ using System.Collections.Generic;
 
 public class Chat : NetworkBehaviour
 {
-
+    [SyncVar(hook = "OnChangeNick")]
     public string nick = "playerName";
+
+    public string displayNick;
 
     string message = "";
 
     static Queue<string> messageQueue = new Queue<string>();
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+
+        displayNick = nick;
+    }
+
+    void OnChangeNick(string _nick)
+    {
+        displayNick = _nick;
+    }
+
+    string lastNick;
 
     void OnGUI()
     {
@@ -41,6 +57,18 @@ public class Chat : NetworkBehaviour
 
         GUILayout.EndArea();
 
+        if (nick != lastNick)
+        {
+            CmdSetNick(nick);
+        }
+
+        lastNick = nick;
+    }
+
+    [Command]
+    void CmdSetNick(string _nick)
+    {
+        nick = _nick;
     }
 
     Color HashColor(string str)
@@ -54,6 +82,7 @@ public class Chat : NetworkBehaviour
     [Command]
     void CmdSendChat(string msg)
     {
+        //nickNet = nick;
         RpcSendChat(msg);
     }
 

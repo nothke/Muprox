@@ -48,14 +48,19 @@ public class ItemManager : NetworkBehaviour
         mouseSpeed = new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"), 0);
     }
 
+    Collider hoverCollider;
+
     void UpdateRaycast()
     {
         hoverWeapon = null;
+        hoverCollider = null;
 
         RaycastHit hit;
         if (Physics.Raycast(raycastFrom.position, raycastFrom.forward, out hit, Mathf.Infinity))
         {
             if (!hit.collider) return;
+
+            hoverCollider = hit.collider;
 
             hoverWeapon = hit.collider.GetComponent<Weapon>();
 
@@ -311,10 +316,17 @@ public class ItemManager : NetworkBehaviour
 
     void OnGUI()
     {
-        if (hoverWeapon)
-        {
-            GUI.Label(new Rect(Screen.width / 2, 20, 1000, 100), hoverWeapon.name + (weapon ? "" : hoverThing));
-        }
+        string displayStr = "";
 
+        if (hoverWeapon)
+            displayStr = hoverWeapon.name + (weapon ? "" : hoverThing);
+
+        if (hoverCollider)
+            if (hoverCollider.GetComponent<Chat>())
+                displayStr = hoverCollider.GetComponent<Chat>().displayNick;
+
+
+
+        GUI.Label(new Rect(Screen.width / 2, 20, 1000, 100), displayStr);
     }
 }
