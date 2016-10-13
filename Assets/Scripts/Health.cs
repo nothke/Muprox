@@ -22,6 +22,10 @@ public class Health : NetworkBehaviour
             currentHealth = 0;
             Debug.Log("Dead!");
 
+            currentHealth = maxHealth;
+
+            StartCoroutine(HidePlayer());
+
             RpcRespawn();
         }
 
@@ -34,7 +38,19 @@ public class Health : NetworkBehaviour
         if (isLocalPlayer)
         {
             // move back to zero location
+            
             transform.position = Vector3.zero;
+
+
+
+            currentHealth = maxHealth;
         }
+    }
+
+    IEnumerator HidePlayer()
+    {
+        gameObject.GetComponent<Renderer>().enabled = false;
+        yield return new WaitForSeconds(2);
+        gameObject.GetComponent<Renderer>().enabled = true;
     }
 }

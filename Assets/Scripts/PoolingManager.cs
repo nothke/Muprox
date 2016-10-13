@@ -8,14 +8,54 @@ public class PoolingManager : MonoBehaviour
 
     public AudioClip tail;
 
-    public ParticleSystem shotParticle;
+    public ParticleSystem shotConcreteParticle;
+    public ParticleSystem shotMetalParticle;
+    public ParticleSystem shotBloodParticle;
 
-    public void WallParticle(Vector3 point, Vector3 normal)
+    public enum SurfaceType { Concrete, Metal, Blood };
+
+    public void DoSurfaceShotParticle(SurfaceType surface, Vector3 point, Vector3 normal)
     {
-        shotParticle.transform.position = point;
-        shotParticle.transform.rotation = Quaternion.LookRotation(normal);
+        ParticleSystem ps = null;
 
-        shotParticle.Play();
+        switch (surface)
+        {
+            case SurfaceType.Concrete:
+                ps = shotConcreteParticle;
+                break;
+            case SurfaceType.Metal:
+                ps = shotMetalParticle;
+                break;
+            case SurfaceType.Blood:
+                ps = shotBloodParticle;
+                break;
+        }
+
+        ps.transform.position = point;
+        ps.transform.rotation = Quaternion.LookRotation(normal);
+
+        ps.Emit(25);
+    }
+
+    public int GetSurfaceType(Collider collider)
+    {
+        if (collider.gameObject.layer == LayerMask.NameToLayer("Player"))
+        {
+            Debug.Log("PLAYER!");
+            return 2;
+        }
+
+        if (collider.sharedMaterial == null)
+            return 0;
+
+        if (collider.sharedMaterial.name == "Metal")
+            return 1;
+
+        Debug.Log(collider.gameObject.layer);
+
+
+
+        return 0;
     }
 
     public void PlayTail(Vector3 point)

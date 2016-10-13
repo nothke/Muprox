@@ -22,6 +22,9 @@ public class ItemManager : NetworkBehaviour
     public Vector3 handStartPos;
     Vector3 handTargetPos;
 
+
+    bool triggerDown = false;
+
     void Update()
     {
 
@@ -35,6 +38,9 @@ public class ItemManager : NetworkBehaviour
 
         if (Input.GetMouseButton(0))
             Use();
+
+        if (Input.GetMouseButtonUp(0))
+            triggerDown = false;
 
         if (Input.GetMouseButtonDown(1))
             StartAim();
@@ -195,13 +201,13 @@ public class ItemManager : NetworkBehaviour
 
     void Use()
     {
-        if (weapon && weapon.cooldown != 0) return;
+        if (weapon && !weapon.CanBeFired()) return;
 
-        handRecoilPos += new Vector3(0, 0, -0.1f) + Random.onUnitSphere * 0.02f;
-        handSmooth = 0.01f;
+        if (weapon && !weapon.repeat && triggerDown) return;
 
-        StopCoroutine("Jerk");
-        StartCoroutine("Jerk");
+        triggerDown = true;
+
+        DoRecoil();
 
         if (weapon)
         {
@@ -211,6 +217,15 @@ public class ItemManager : NetworkBehaviour
 
             ShootRay(weapon);
         }
+    }
+
+    void DoRecoil()
+    {
+        handRecoilPos += new Vector3(0, 0, -0.1f) + Random.onUnitSphere * 0.02f;
+        handSmooth = 0.01f;
+
+        StopCoroutine("Jerk");
+        StartCoroutine("Jerk");
     }
 
     [Command]
@@ -227,18 +242,37 @@ public class ItemManager : NetworkBehaviour
 
     void ShootRay(Weapon _weapon)
     {
-        RaycastHit hit;
-        if (Physics.Raycast(_weapon.muzzle.position, _weapon.muzzle.forward, out hit, Mathf.Infinity))
+        for (int i = 0; i < _weapon.buck; i++)
         {
-            Rigidbody rb = FindRigidbody(hit.collider);
+            Vector3 rayDirection = _weapon.muzzle.forward + Random.insideUnitSphere * _weapon.spread;
 
-            if (rb)
+            RaycastHit hit;
+            if (Physics.Raycast(_weapon.muzzle.position, rayDirection, out hit, Mathf.Infinity))
             {
-                CmdPush(rb.gameObject, hit.point, _weapon.muzzle.forward * 300);
-            }
 
-            CmdDoVisual(hit.point, hit.normal);
+
+                Rigidbody rb = FindRigidbody(hit.collider);
+
+                if (rb)
+                {
+                    CmdPush(rb.gameObject, hit.point, _weapon.muzzle.forward * 300);
+                }
+
+                Health health = hit.collider.GetComponent<Health>();
+
+                if (health)
+                    CmdTakeHealth(health.gameObject, _weapon.damage);
+
+                CmdDoVisual(PoolingManager.e.GetSurfaceType(hit.collider), hit.point, hit.normal);
+            }
         }
+    }
+
+
+    [Command]
+    void CmdTakeHealth(GameObject playerObject, int amount)
+    {
+        playerObject.GetComponent<Health>().TakeDamage(amount);
     }
 
     Rigidbody FindRigidbody(Collider collider)
@@ -289,15 +323,15 @@ public class ItemManager : NetworkBehaviour
     }
 
     [Command]
-    void CmdDoVisual(Vector3 atPoint, Vector3 normal)
+    void CmdDoVisual(int surfaceType, Vector3 atPoint, Vector3 normal)
     {
-        RpcDoVisual(atPoint, normal);
+        RpcDoVisual(surfaceType, atPoint, normal);
     }
 
     [ClientRpc]
-    void RpcDoVisual(Vector3 atPoint, Vector3 normal)
+    void RpcDoVisual(int surfaceType, Vector3 atPoint, Vector3 normal)
     {
-        PoolingManager.e.WallParticle(atPoint, normal);
+        PoolingManager.e.DoSurfaceShotParticle((PoolingManager.SurfaceType)surfaceType, atPoint, normal);
     }
 
     [ClientRpc]

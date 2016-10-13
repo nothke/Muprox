@@ -8,8 +8,7 @@ public class BallisticWeapon : Weapon
 
     public GameObject bulletPrefab;
 
-    public bool repeat;
-    public float recoil = 1;
+
 
 
 

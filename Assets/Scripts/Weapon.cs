@@ -14,15 +14,20 @@ public class Weapon : MonoBehaviour
     public AudioClip fireShot;
     public AudioClip fireNoAmmo;
 
-    Vector3 holdPosition = new Vector3(0.2f, -0.2f, 0.2f);
     public Transform aimPivot;
     public Transform handPivot;
-
-    //public GameObject nonNetworkPrefab;
 
     [HideInInspector]
     public float cooldown = 0;
     public float cooldownSeconds = 0.1f;
+
+    public int damage = 10;
+
+    public bool repeat;
+    public float recoil = 1;
+
+    public float spread = 0;
+    public int buck = 1;
 
     public virtual void Update()
     {
@@ -72,5 +77,20 @@ public class Weapon : MonoBehaviour
         yield return null;
 
         fireFlash.enabled = false;
+    }
+
+    public bool CanBeFired()
+    {
+        if (cooldown <= 0) return true;
+
+        return false;
+    }
+
+    public bool CanBeShot()
+    {
+        if (CanBeFired() && ammo > 0)
+            return true;
+
+        return false;
     }
 }
