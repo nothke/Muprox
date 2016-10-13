@@ -135,6 +135,8 @@ public class PlayerController : NetworkBehaviour
         if (Input.GetKeyDown(KeyCode.B))
             CmdFire();
 
+        // PUSHING
+        /*
         if (Input.GetMouseButtonDown(1))
         {
             RaycastHit hit;
@@ -160,7 +162,7 @@ public class PlayerController : NetworkBehaviour
                     CmdPush(rb.gameObject, hit.point, head.forward);
                 }
             }
-        }
+        }*/
     }
 
     /*

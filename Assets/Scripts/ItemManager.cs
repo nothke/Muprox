@@ -76,20 +76,50 @@ public class ItemManager : NetworkBehaviour
 
     void Take(Weapon _weapon)
     {
-
         GameObject go = Instantiate(_weapon.nonNetworkPrefab) as GameObject;
+        CmdInstItemInHand(_weapon.gameObject);
 
-        Weapon n_Weapon = go.GetComponent<Weapon>();
+        Weapon takenWeapon = go.GetComponent<Weapon>();
 
-        go.transform.parent = hand;
-        go.transform.localPosition = -n_Weapon.handPivot.localPosition;
-        go.transform.localRotation = Quaternion.identity;
+        PositionWeaponAtHand(takenWeapon);
 
-        handAimPos = n_Weapon.handPivot.localPosition - n_Weapon.aimPivot.localPosition + Vector3.forward * 0.4f;
+        handAimPos = takenWeapon.handPivot.localPosition - takenWeapon.aimPivot.localPosition + Vector3.forward * 0.4f;
 
-        CmdDestroyWeapon(_weapon.gameObject);
+        //CmdDestroyWeapon(_weapon.gameObject);
 
-        weapon = n_Weapon;
+        weapon = takenWeapon;
+    }
+
+    void PositionWeaponAtHand(Weapon weapon)
+    {
+        weapon.transform.parent = hand;
+        weapon.transform.localPosition = -weapon.handPivot.localPosition;
+        weapon.transform.localRotation = Quaternion.identity;
+    }
+
+    [Command]
+    void CmdInstItemInHand(GameObject worldObject)
+    {
+        RpcInstItemInHand(worldObject);
+
+        Destroy(worldObject);
+
+        Debug.Log("Took " + worldObject.name);
+    }
+
+    [ClientRpc]
+    void RpcInstItemInHand(GameObject worldObject)
+    {
+        if (isClient) return;
+
+        if (!worldObject) Debug.Log("no network prefab");
+
+        GameObject go = Instantiate(worldObject.GetComponent<Weapon>().nonNetworkPrefab) as GameObject;
+
+        Weapon _weapon = go.GetComponent<Weapon>();
+
+        PositionWeaponAtHand(_weapon);
+
     }
 
     [Command]
