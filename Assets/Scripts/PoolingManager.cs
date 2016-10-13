@@ -11,6 +11,7 @@ public class PoolingManager : MonoBehaviour
     public ParticleSystem shotConcreteParticle;
     public ParticleSystem shotMetalParticle;
     public ParticleSystem shotBloodParticle;
+    public ParticleSystem explosionParticle;
 
     public enum SurfaceType { Concrete, Metal, Blood };
 

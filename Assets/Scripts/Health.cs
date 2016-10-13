@@ -11,6 +11,10 @@ public class Health : NetworkBehaviour
     public int currentHealth = maxHealth;
     //public RectTransform healthBar;
 
+    public bool destroyOnDeath;
+
+    public ParticleSystem deathParticle;
+    public AudioClip deathClip;
 
     public void TakeDamage(int amount)
     {
@@ -19,12 +23,37 @@ public class Health : NetworkBehaviour
         currentHealth -= amount;
         if (currentHealth <= 0)
         {
+            deathParticle = PoolingManager.e.explosionParticle;
+
+            if (deathParticle)
+            {
+                deathParticle.transform.position = transform.position;
+                deathParticle.Play();
+            }
+
+            if (deathClip)
+            {
+                deathClip.PlayOnce(transform.position, 1, 1, 90, 5);
+            }
+
+            if (destroyOnDeath)
+            {
+
+
+                Destroy(gameObject);
+
+
+
+                return;
+            }
+
             currentHealth = 0;
             Debug.Log("Dead!");
 
             currentHealth = maxHealth;
 
-            StartCoroutine(HidePlayer());
+            if (gameObject.GetComponent<Renderer>())
+                StartCoroutine(HidePlayer());
 
             RpcRespawn();
         }
@@ -38,7 +67,7 @@ public class Health : NetworkBehaviour
         if (isLocalPlayer)
         {
             // move back to zero location
-            
+
             transform.position = Vector3.zero;
 
 
@@ -49,6 +78,7 @@ public class Health : NetworkBehaviour
 
     IEnumerator HidePlayer()
     {
+
         gameObject.GetComponent<Renderer>().enabled = false;
         yield return new WaitForSeconds(2);
         gameObject.GetComponent<Renderer>().enabled = true;

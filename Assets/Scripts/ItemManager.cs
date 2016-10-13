@@ -260,6 +260,9 @@ public class ItemManager : NetworkBehaviour
 
                 Health health = hit.collider.GetComponent<Health>();
 
+                if (!health && rb)
+                    health = rb.GetComponent<Health>();
+
                 if (health)
                     CmdTakeHealth(health.gameObject, _weapon.damage);
 

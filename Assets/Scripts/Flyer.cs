@@ -22,6 +22,8 @@ public class Flyer : MonoBehaviour
 
     public LayerMask raycastMask;
 
+    public AudioSource propAudio;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -102,6 +104,11 @@ public class Flyer : MonoBehaviour
             if (TargetIsInView() && GunIsReady())
                 TryShoot();
         }
+
+        if (propAudio)
+        {
+            propAudio.pitch = totalForce.magnitude / 9.8f;
+        }
     }
 
     void UpdateLEDColor()
@@ -166,6 +173,8 @@ public class Flyer : MonoBehaviour
 
     }
 
+    Vector3 totalForce;
+
     void FixedUpdate()
     {
         if (target)
@@ -183,7 +192,9 @@ public class Flyer : MonoBehaviour
         if (rb.velocity.magnitude > 5)
             force = Vector3.zero;
 
-        rb.AddForce(transform.up * -Physics.gravity.y + force);
+        totalForce = transform.up * -Physics.gravity.y + force;
+
+        rb.AddForce(totalForce);
 
     }
 }
