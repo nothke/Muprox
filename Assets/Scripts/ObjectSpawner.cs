@@ -9,7 +9,7 @@ public class ObjectSpawner : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        GameObject go = Instantiate(prefab, transform.position, Quaternion.identity) as GameObject;
+        GameObject go = Instantiate(prefab, transform.position, transform.rotation) as GameObject;
 
         NetworkServer.Spawn(go);
     }

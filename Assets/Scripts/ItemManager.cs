@@ -76,6 +76,7 @@ public class ItemManager : NetworkBehaviour
 
     void Take(Weapon _weapon)
     {
+
         GameObject go = Instantiate(_weapon.nonNetworkPrefab) as GameObject;
 
         Weapon n_Weapon = go.GetComponent<Weapon>();
@@ -89,6 +90,15 @@ public class ItemManager : NetworkBehaviour
         CmdDestroyWeapon(_weapon.gameObject);
 
         weapon = n_Weapon;
+    }
+
+    [Command]
+    void CmdPush(GameObject go, Vector3 point, Vector3 direction)
+    {
+        Rigidbody _rigidbody = go.GetComponent<Rigidbody>();
+
+        if (_rigidbody)
+            _rigidbody.AddForceAtPosition(direction, point);
     }
 
     Vector3 mouseSpeed;
@@ -108,15 +118,10 @@ public class ItemManager : NetworkBehaviour
 
     void Use()
     {
-        if (weapon is BallisticWeapon)
-        {
-            BallisticWeapon bw = weapon as BallisticWeapon;
+        if (weapon && weapon.cooldown != 0) return;
 
-            if (bw.cooldown != 0) return;
-        }
-
-        handRecoilPos = new Vector3(0, 0, -0.1f);
-        handSmooth = 0.001f;
+        handRecoilPos += new Vector3(0, 0, -0.1f) + Random.onUnitSphere * 0.02f;
+        handSmooth = 0.01f;
 
         StopCoroutine("Jerk");
         StartCoroutine("Jerk");
@@ -124,6 +129,38 @@ public class ItemManager : NetworkBehaviour
         if (weapon)
         {
             weapon.Fire();
+
+            ShootRay(weapon);
+        }
+    }
+
+    void ShootRay(Weapon _weapon)
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(_weapon.muzzle.position, _weapon.muzzle.forward, out hit, Mathf.Infinity))
+        {
+            Rigidbody rb = hit.collider.GetComponent<Rigidbody>();
+
+            Transform lastParent = hit.collider.transform;
+            lastParent = hit.collider.transform.parent;
+
+            for (int i = 0; i < 100; i++)
+            {
+                if (rb) break;
+                if (!lastParent) break;
+
+                rb = lastParent.GetComponent<Rigidbody>();
+                lastParent = lastParent.parent;
+            }
+
+
+            if (rb)
+            {
+                Debug.Log("Pushing: " + rb.gameObject.name);
+                CmdPush(rb.gameObject, hit.point, _weapon.muzzle.forward * 300);
+            }
+
+            CmdDoVisual(hit.point, hit.normal);
         }
     }
 
@@ -153,6 +190,18 @@ public class ItemManager : NetworkBehaviour
 
         Destroy(weaponGO);
         //RpcDestroyWeapon();
+    }
+
+    [Command]
+    void CmdDoVisual(Vector3 atPoint, Vector3 normal)
+    {
+        RpcDoVisual(atPoint, normal);
+    }
+
+    [ClientRpc]
+    void RpcDoVisual(Vector3 atPoint, Vector3 normal)
+    {
+        PoolingManager.e.WallParticle(atPoint, normal);
     }
 
     [ClientRpc]

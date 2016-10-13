@@ -20,8 +20,24 @@ public class Weapon : MonoBehaviour
 
     public GameObject nonNetworkPrefab;
 
+    [HideInInspector]
+    public float cooldown = 0;
+    public float cooldownSeconds = 0.1f;
+
+    public virtual void Update()
+    {
+        cooldown -= Time.deltaTime / cooldownSeconds;
+
+        cooldown = Mathf.Clamp01(cooldown);
+    }
+
     public virtual void Fire()
     {
+        if (cooldown > 0)
+            return;
+
+        cooldown = 1;
+
         if (ammo <= 0)
         {
             if (fireNoAmmo)

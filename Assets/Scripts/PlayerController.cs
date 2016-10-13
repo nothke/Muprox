@@ -75,10 +75,7 @@ public class PlayerController : NetworkBehaviour
         Rigidbody _rigidbody = go.GetComponent<Rigidbody>();
 
         if (_rigidbody)
-            _rigidbody.AddForceAtPosition(direction * 1000, point);
-
-
-
+            _rigidbody.AddForceAtPosition(direction, point);
     }
 
     void Update()
@@ -135,9 +132,8 @@ public class PlayerController : NetworkBehaviour
         head.localRotation = yQuaternion;
         transform.localRotation = xQuaternion;
 
-
-        //if (Input.GetMouseButtonDown(0))
-            //CmdFire();
+        if (Input.GetKeyDown(KeyCode.B))
+            CmdFire();
 
         if (Input.GetMouseButtonDown(1))
         {
