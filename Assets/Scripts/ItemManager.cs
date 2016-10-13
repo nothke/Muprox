@@ -30,9 +30,26 @@ public class ItemManager : NetworkBehaviour
 
         UpdateHand();
 
-        if (Input.GetKeyDown(KeyCode.Q))
-            CmdTest();
+        UpdateRaycast();
 
+
+        if (Input.GetMouseButton(0))
+            Use();
+
+        if (Input.GetMouseButtonDown(1))
+            StartAim();
+
+        if (Input.GetMouseButtonUp(1))
+            EndAim();
+
+        if (Input.GetKeyDown(KeyCode.Q))
+            ParentDrop();
+
+        mouseSpeed = new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"), 0);
+    }
+
+    void UpdateRaycast()
+    {
         RaycastHit hit;
         if (Physics.Raycast(raycastFrom.position, raycastFrom.forward, out hit, Mathf.Infinity))
         {
@@ -55,24 +72,6 @@ public class ItemManager : NetworkBehaviour
             else hoverWeapon = null;
         }
         else hoverWeapon = null;
-
-
-
-        if (Input.GetMouseButton(0))
-            Use();
-
-        if (Input.GetMouseButtonDown(1))
-            StartAim();
-
-        if (Input.GetMouseButtonUp(1))
-            EndAim();
-
-        if (Input.GetKeyDown(KeyCode.Q))
-            ParentDrop();
-
-        mouseSpeed = new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"), 0);
-
-        //lastPos = handTargetPos;
     }
 
     Vector3 handAimPos = new Vector3(0, -0.1f, 0.5f);
@@ -137,6 +136,7 @@ public class ItemManager : NetworkBehaviour
         EnablePhysics(_weapon.GetComponent<Weapon>());
     }
 
+    [System.Obsolete]
     void Take(Weapon _weapon)
     {
         GameObject go = Instantiate(_weapon.nonNetworkPrefab) as GameObject;
@@ -249,20 +249,7 @@ public class ItemManager : NetworkBehaviour
         RaycastHit hit;
         if (Physics.Raycast(_weapon.muzzle.position, _weapon.muzzle.forward, out hit, Mathf.Infinity))
         {
-            Rigidbody rb = hit.collider.GetComponent<Rigidbody>();
-
-            Transform lastParent = hit.collider.transform;
-            lastParent = hit.collider.transform.parent;
-
-            for (int i = 0; i < 100; i++)
-            {
-                if (rb) break;
-                if (!lastParent) break;
-
-                rb = lastParent.GetComponent<Rigidbody>();
-                lastParent = lastParent.parent;
-            }
-
+            Rigidbody rb = FindRigidbody(hit.collider);
 
             if (rb)
             {
@@ -271,6 +258,25 @@ public class ItemManager : NetworkBehaviour
 
             CmdDoVisual(hit.point, hit.normal);
         }
+    }
+
+    Rigidbody FindRigidbody(Collider collider)
+    {
+        Rigidbody rb = collider.GetComponent<Rigidbody>();
+
+        Transform lastParent = collider.transform;
+        lastParent = collider.transform.parent;
+
+        for (int i = 0; i < 100; i++)
+        {
+            if (rb) break;
+            if (!lastParent) break;
+
+            rb = lastParent.GetComponent<Rigidbody>();
+            lastParent = lastParent.parent;
+        }
+
+        return rb;
     }
 
     IEnumerator Jerk()
@@ -325,19 +331,6 @@ public class ItemManager : NetworkBehaviour
 
     }
 
-    [Command]
-    void CmdTest()
-    {
-
-        RpcTest();
-    }
-
-    [ClientRpc]
-    void RpcTest()
-    {
-        Debug.Log("Test message sent from: " + gameObject.name);
-
-    }
 
     void OnGUI()
     {
