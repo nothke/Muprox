@@ -136,8 +136,8 @@ public class PlayerController : NetworkBehaviour
         transform.localRotation = xQuaternion;
 
 
-        if (Input.GetMouseButtonDown(0))
-            CmdFire();
+        //if (Input.GetMouseButtonDown(0))
+            //CmdFire();
 
         if (Input.GetMouseButtonDown(1))
         {

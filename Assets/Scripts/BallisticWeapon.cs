@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnityEngine.Networking;
+//using UnityEngine.Networking;
 
 public class BallisticWeapon : Weapon
 {
@@ -8,33 +8,36 @@ public class BallisticWeapon : Weapon
     public GameObject bulletPrefab;
 
     public bool repeat;
-    public float cooldownSeconds = 0.1f;
+    public float cooldownSeconds = 1;
+    public float cooldown = 0;
     public float recoil = 1;
 
-    [Command]
-    public override void CmdFire()
+    void Update()
     {
-        base.CmdFire();
+        cooldown -= Time.deltaTime / cooldownSeconds;
 
-        if (ammo <= 0)
-        {
-            if (fireNoAmmo)
-                AudioSource.PlayClipAtPoint(fireNoAmmo, transform.position);
+        cooldown = Mathf.Clamp01(cooldown);
 
-            return;
-        }
-
-        ammo--;
-
-
-        if (fireShot)
-            AudioSource.PlayClipAtPoint(fireShot, transform.position);
-
-        GameObject bullet = Instantiate(bulletPrefab, muzzle.position, muzzle.rotation) as GameObject;
-        NetworkServer.Spawn(bullet);
-
-        bullet.GetComponent<Rigidbody>().AddForce(muzzle.forward * 200);
     }
 
+    //[Command]
+    public override void Fire()
+    {
 
+        if (cooldown > 0)
+            return;
+
+        cooldown = 1;
+
+        base.Fire();
+
+
+
+
+
+        GameObject bullet = Instantiate(bulletPrefab, muzzle.position, muzzle.rotation) as GameObject;
+        //NetworkServer.Spawn(bullet);
+
+        bullet.GetComponent<Rigidbody>().AddForce(muzzle.forward * 100, ForceMode.VelocityChange);
+    }
 }

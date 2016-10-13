@@ -1,12 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnityEngine.Networking;
+//using UnityEngine.Networking;
 
-public class Weapon : NetworkBehaviour
+public class Weapon : MonoBehaviour
 {
     public Transform muzzle;
 
     public Light fireFlash;
+    public ParticleSystem fireParticles;
 
     public int ammo = 10;
 
@@ -14,13 +15,41 @@ public class Weapon : NetworkBehaviour
     public AudioClip fireNoAmmo;
 
     Vector3 holdPosition = new Vector3(0.2f, -0.2f, 0.2f);
-    Vector3 aimPosition;
+    public Transform aimPivot;
+    public Transform handPivot;
 
+    public GameObject nonNetworkPrefab;
 
-
-    [Command]
-    public virtual void CmdFire()
+    public virtual void Fire()
     {
+        if (ammo <= 0)
+        {
+            if (fireNoAmmo)
+                AudioSource.PlayClipAtPoint(fireNoAmmo, transform.position);
 
+            return;
+        }
+
+        ammo--;
+
+        if (fireFlash)
+            fireFlash.enabled = true;
+
+        StartCoroutine(Flash());
+
+        if (fireShot)
+            AudioSource.PlayClipAtPoint(fireShot, transform.position);
+
+        if (fireParticles)
+            fireParticles.Emit(10);
+    }
+
+    IEnumerator Flash()
+    {
+        yield return null;
+        yield return null;
+        yield return null;
+
+        fireFlash.enabled = false;
     }
 }
