@@ -46,7 +46,7 @@ public class ItemManager : NetworkBehaviour
                     {
                         if (Input.GetMouseButtonDown(1))
                         {
-                            Take(hoverWeapon);
+                            ParentTake(hoverWeapon);
                         }
                     }
 
@@ -67,12 +67,75 @@ public class ItemManager : NetworkBehaviour
         if (Input.GetMouseButtonUp(1))
             EndAim();
 
+        if (Input.GetKeyDown(KeyCode.Q))
+            ParentDrop();
+
         mouseSpeed = new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"), 0);
 
         //lastPos = handTargetPos;
     }
 
     Vector3 handAimPos = new Vector3(0, -0.1f, 0.5f);
+
+    void ParentTake(Weapon _weapon)
+    {
+        PositionWeaponAtHand(_weapon);
+        SetAimPos(_weapon);
+        DisablePhysics(_weapon);
+
+        CmdSetParent(_weapon.gameObject, netId);
+
+        weapon = _weapon;
+    }
+
+    void ParentDrop()
+    {
+        if (!weapon) return;
+
+        weapon.transform.parent = null;
+        EnablePhysics(weapon);
+
+        CmdNullifyParent(weapon.gameObject);
+
+        weapon = null;
+    }
+
+    [Command]
+    void CmdSetParent(GameObject _weapon, NetworkInstanceId id)
+    {
+        _weapon.GetComponent<Parentable>().parentNetId = id;
+
+        PositionWeaponAtHand(_weapon.GetComponent<Weapon>());
+        DisablePhysics(_weapon.GetComponent<Weapon>());
+
+        Debug.Log("Command Set Parent to " + id);
+
+        RpcSetParent(_weapon);
+    }
+
+
+
+    [ClientRpc]
+    void RpcSetParent(GameObject _weapon)
+    {
+        PositionWeaponAtHand(_weapon.GetComponent<Weapon>());
+        DisablePhysics(_weapon.GetComponent<Weapon>());
+    }
+
+    [Command]
+    void CmdNullifyParent(GameObject _weapon)
+    {
+        _weapon.GetComponent<Parentable>().parentNetId = new NetworkInstanceId(0);
+
+        RpcNullifyParent(_weapon);
+    }
+
+    [ClientRpc]
+    void RpcNullifyParent(GameObject _weapon)
+    {
+        _weapon.transform.parent = null;
+        EnablePhysics(_weapon.GetComponent<Weapon>());
+    }
 
     void Take(Weapon _weapon)
     {
@@ -83,7 +146,7 @@ public class ItemManager : NetworkBehaviour
 
         PositionWeaponAtHand(takenWeapon);
 
-        handAimPos = takenWeapon.handPivot.localPosition - takenWeapon.aimPivot.localPosition + Vector3.forward * 0.4f;
+        SetAimPos(takenWeapon);
 
         //CmdDestroyWeapon(_weapon.gameObject);
 
@@ -95,6 +158,23 @@ public class ItemManager : NetworkBehaviour
         weapon.transform.parent = hand;
         weapon.transform.localPosition = -weapon.handPivot.localPosition;
         weapon.transform.localRotation = Quaternion.identity;
+    }
+
+    void SetAimPos(Weapon weapon)
+    {
+        handAimPos = weapon.handPivot.localPosition - weapon.aimPivot.localPosition + Vector3.forward * 0.4f;
+    }
+
+    void DisablePhysics(Weapon weapon)
+    {
+        weapon.GetComponent<Rigidbody>().isKinematic = true;
+        weapon.GetComponent<Collider>().enabled = false;
+    }
+
+    void EnablePhysics(Weapon weapon)
+    {
+        weapon.GetComponent<Rigidbody>().isKinematic = false;
+        weapon.GetComponent<Collider>().enabled = true;
     }
 
     [Command]
@@ -186,7 +266,6 @@ public class ItemManager : NetworkBehaviour
 
             if (rb)
             {
-                Debug.Log("Pushing: " + rb.gameObject.name);
                 CmdPush(rb.gameObject, hit.point, _weapon.muzzle.forward * 300);
             }
 
