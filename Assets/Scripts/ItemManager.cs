@@ -196,10 +196,25 @@ public class ItemManager : NetworkBehaviour
 
         if (weapon)
         {
+            CmdGunFire(weapon.gameObject);
+
             weapon.Fire();
 
             ShootRay(weapon);
         }
+    }
+
+    [Command]
+    void CmdGunFire(GameObject _weapon)
+    {
+        RpcGunFire(_weapon);
+    }
+
+    [ClientRpc]
+    void RpcGunFire(GameObject _weapon)
+    {
+        //if (!isClient)
+            _weapon.GetComponent<Weapon>().Fire();
     }
 
     void ShootRay(Weapon _weapon)
