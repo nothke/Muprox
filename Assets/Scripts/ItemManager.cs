@@ -50,34 +50,33 @@ public class ItemManager : NetworkBehaviour
 
     void UpdateRaycast()
     {
+        hoverWeapon = null;
+
         RaycastHit hit;
         if (Physics.Raycast(raycastFrom.position, raycastFrom.forward, out hit, Mathf.Infinity))
         {
-            if (hit.collider)
-            {
-                if (!weapon)
-                {
-                    hoverWeapon = hit.collider.GetComponent<Weapon>();
+            if (!hit.collider) return;
 
-                    if (hoverWeapon)
-                    {
-                        if (Input.GetMouseButtonDown(1))
-                        {
-                            ParentTake(hoverWeapon);
-                        }
-                    }
+            hoverWeapon = hit.collider.GetComponent<Weapon>();
 
-                }
-            }
-            else hoverWeapon = null;
+            if (!hoverWeapon) return;
+
+            if (Input.GetMouseButtonDown(1))
+                ParentTake(hoverWeapon);
         }
-        else hoverWeapon = null;
+
     }
 
     Vector3 handAimPos = new Vector3(0, -0.1f, 0.5f);
 
     void ParentTake(Weapon _weapon)
     {
+        if (weapon)
+        {
+            Debug.Log("Already holding a weapon");
+            return;
+        }
+
         PositionWeaponAtHand(_weapon);
         SetAimPos(_weapon);
         DisablePhysics(_weapon);
@@ -136,22 +135,6 @@ public class ItemManager : NetworkBehaviour
         EnablePhysics(_weapon.GetComponent<Weapon>());
     }
 
-    [System.Obsolete]
-    void Take(Weapon _weapon)
-    {
-        GameObject go = Instantiate(_weapon.nonNetworkPrefab) as GameObject;
-        CmdInstItemInHand(_weapon.gameObject);
-
-        Weapon takenWeapon = go.GetComponent<Weapon>();
-
-        PositionWeaponAtHand(takenWeapon);
-
-        SetAimPos(takenWeapon);
-
-        //CmdDestroyWeapon(_weapon.gameObject);
-
-        weapon = takenWeapon;
-    }
 
     void PositionWeaponAtHand(Weapon weapon)
     {
@@ -175,31 +158,6 @@ public class ItemManager : NetworkBehaviour
     {
         weapon.GetComponent<Rigidbody>().isKinematic = false;
         weapon.GetComponent<Collider>().enabled = true;
-    }
-
-    [Command]
-    void CmdInstItemInHand(GameObject worldObject)
-    {
-        RpcInstItemInHand(worldObject);
-
-        Destroy(worldObject);
-
-        Debug.Log("Took " + worldObject.name);
-    }
-
-    [ClientRpc]
-    void RpcInstItemInHand(GameObject worldObject)
-    {
-        if (isClient) return;
-
-        if (!worldObject) Debug.Log("no network prefab");
-
-        GameObject go = Instantiate(worldObject.GetComponent<Weapon>().nonNetworkPrefab) as GameObject;
-
-        Weapon _weapon = go.GetComponent<Weapon>();
-
-        PositionWeaponAtHand(_weapon);
-
     }
 
     [Command]
@@ -331,10 +289,14 @@ public class ItemManager : NetworkBehaviour
 
     }
 
+    const string hoverThing = "\n right click to take";
 
     void OnGUI()
     {
         if (hoverWeapon)
-            GUI.Label(new Rect(Screen.width / 2, 20, 1000, 100), hoverWeapon.name + "\n right click to take");
+        {
+            GUI.Label(new Rect(Screen.width / 2, 20, 1000, 100), hoverWeapon.name + (weapon ? "" : hoverThing));
+        }
+
     }
 }

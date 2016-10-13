@@ -18,7 +18,7 @@ public class Weapon : MonoBehaviour
     public Transform aimPivot;
     public Transform handPivot;
 
-    public GameObject nonNetworkPrefab;
+    //public GameObject nonNetworkPrefab;
 
     [HideInInspector]
     public float cooldown = 0;
@@ -54,7 +54,11 @@ public class Weapon : MonoBehaviour
         StartCoroutine(Flash());
 
         if (fireShot)
+        {
             AudioSource.PlayClipAtPoint(fireShot, transform.position);
+
+            PoolingManager.e.PlayTail(transform.position);
+        }
 
         if (fireParticles)
             fireParticles.Emit(10);

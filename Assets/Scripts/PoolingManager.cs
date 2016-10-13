@@ -6,6 +6,7 @@ public class PoolingManager : MonoBehaviour
     public static PoolingManager e;
     void Awake() { e = this; }
 
+    public AudioClip tail;
 
     public ParticleSystem shotParticle;
 
@@ -15,6 +16,11 @@ public class PoolingManager : MonoBehaviour
         shotParticle.transform.rotation = Quaternion.LookRotation(normal);
 
         shotParticle.Play();
+    }
+
+    public void PlayTail(Vector3 point)
+    {
+        AudioSource.PlayClipAtPoint(tail, point);
     }
 
 }
