@@ -6,6 +6,7 @@ public class ItemManager : NetworkBehaviour
 {
 
     Weapon weapon;
+    Item itemInHands;
 
     Weapon hoverWeapon;
 
@@ -27,8 +28,6 @@ public class ItemManager : NetworkBehaviour
 
     void Update()
     {
-
-
         if (!isLocalPlayer) return;
 
         UpdateHand();
@@ -49,7 +48,10 @@ public class ItemManager : NetworkBehaviour
             EndAim();
 
         if (Input.GetKeyDown(KeyCode.Q))
+        {
             ParentDrop();
+            Drop();
+        }
 
         mouseSpeed = new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"), 0);
     }
@@ -62,10 +64,9 @@ public class ItemManager : NetworkBehaviour
         hoverCollider = null;
 
         RaycastHit hit;
-        if (Physics.Raycast(raycastFrom.position, raycastFrom.forward, out hit, Mathf.Infinity))
-        {
 
-        }
+        if (!Physics.Raycast(raycastFrom.position, raycastFrom.forward, out hit, Mathf.Infinity))
+            return;
 
         if (!hit.collider) return;
 
@@ -82,6 +83,8 @@ public class ItemManager : NetworkBehaviour
                 Take(hoverWeapon);
         }
 
+
+
         // interactable
 
         Interactable interactable = hit.collider.GetComponent<Interactable>();
@@ -95,6 +98,15 @@ public class ItemManager : NetworkBehaviour
                     CmdInteract(interactable.gameObject);
 
         }
+
+        if (interactable is Item)
+        {
+            if (Input.GetMouseButtonDown(1))
+            {
+                Item item = interactable as Item;
+                Take(item);
+            }
+        }
     }
 
     [Command]
@@ -105,6 +117,24 @@ public class ItemManager : NetworkBehaviour
 
     Vector3 handAimPos = new Vector3(0, -0.1f, 0.5f);
 
+    void Take(Item item)
+    {
+        if (itemInHands)
+        {
+            Debug.Log("Already holding an item");
+            return;
+        }
+
+        PositionItemAtHand(item);
+        //SetAimPos(item); // no aim for items??
+        DisablePhysics(item);
+
+        CmdSetItemParent(item.gameObject, netId);
+
+        itemInHands = item;
+    }
+
+    // TBO
     void Take(Weapon _weapon)
     {
         if (weapon)
@@ -122,6 +152,7 @@ public class ItemManager : NetworkBehaviour
         weapon = _weapon;
     }
 
+    // TBO
     void ParentDrop()
     {
         if (!weapon) return;
@@ -132,6 +163,46 @@ public class ItemManager : NetworkBehaviour
         CmdNullifyParent(weapon.gameObject);
 
         weapon = null;
+    }
+
+    void Drop()
+    {
+        if (!itemInHands) return;
+
+        itemInHands.transform.parent = null;
+        EnablePhysics(itemInHands);
+
+        CmdNullifyParent(itemInHands.gameObject);
+
+        itemInHands = null;
+    }
+
+    [Command]
+    void CmdSetItemParent(GameObject itemObject, NetworkInstanceId parentId)
+    {
+        // integrate parentable into item?
+        itemObject.GetComponent<Parentable>().parentNetId = parentId;
+
+        Item item = itemObject.GetComponent<Item>();
+
+
+        PositionItemAtHand(item);
+        itemObject.GetComponent<NetworkTransform>().enabled = false;
+        DisablePhysics(item);
+
+        Debug.Log("Command Set Parent to " + parentId);
+
+        RpcSetItemParent(itemObject);
+    }
+
+    [ClientRpc]
+    void RpcSetItemParent(GameObject itemObject)
+    {
+        Item item = itemObject.GetComponent<Item>();
+
+        PositionItemAtHand(item);
+        itemObject.GetComponent<NetworkTransform>().enabled = false;
+        DisablePhysics(item);
     }
 
     [Command]
@@ -159,23 +230,30 @@ public class ItemManager : NetworkBehaviour
     }
 
     [Command]
-    void CmdNullifyParent(GameObject _weapon)
+    void CmdNullifyParent(GameObject itemObject)
     {
-        _weapon.GetComponent<Parentable>().parentNetId = new NetworkInstanceId(0);
-        _weapon.GetComponent<NetworkTransform>().enabled = true;
+        itemObject.GetComponent<Parentable>().parentNetId = new NetworkInstanceId(0);
+        itemObject.GetComponent<NetworkTransform>().enabled = true;
 
-        RpcNullifyParent(_weapon);
+        RpcNullifyParent(itemObject);
     }
 
     [ClientRpc]
-    void RpcNullifyParent(GameObject _weapon)
+    void RpcNullifyParent(GameObject itemObject)
     {
-        _weapon.transform.parent = null;
-        EnablePhysics(_weapon.GetComponent<Weapon>());
-        _weapon.GetComponent<NetworkTransform>().enabled = true;
+        itemObject.transform.parent = null;
+
+        // TBO
+        if (itemObject.GetComponent<Weapon>())
+            EnablePhysics(itemObject.GetComponent<Weapon>());
+
+        if (itemObject.GetComponent<Item>())
+            EnablePhysics(itemObject.GetComponent<Item>());
+
+        itemObject.GetComponent<NetworkTransform>().enabled = true;
     }
 
-
+    // TBO
     void PositionWeaponAtHand(Weapon weapon)
     {
         weapon.transform.parent = hand;
@@ -183,21 +261,42 @@ public class ItemManager : NetworkBehaviour
         weapon.transform.localRotation = Quaternion.identity;
     }
 
+    void PositionItemAtHand(Item item)
+    {
+        item.transform.parent = hand;
+        item.transform.localPosition = -item.handPivot.localPosition;
+        item.transform.localRotation = Quaternion.identity;
+    }
+
     void SetAimPos(Weapon weapon)
     {
         handAimPos = weapon.handPivot.localPosition - weapon.aimPivot.localPosition + Vector3.forward * 0.4f;
     }
 
+    // TBO
     void DisablePhysics(Weapon weapon)
     {
         weapon.GetComponent<Rigidbody>().isKinematic = true;
         weapon.GetComponent<Collider>().enabled = false;
     }
 
+    // TBO
     void EnablePhysics(Weapon weapon)
     {
         weapon.GetComponent<Rigidbody>().isKinematic = false;
         weapon.GetComponent<Collider>().enabled = true;
+    }
+
+    void DisablePhysics(Item item)
+    {
+        item.GetComponent<Rigidbody>().isKinematic = true;
+        item.GetComponent<Collider>().enabled = false;
+    }
+
+    void EnablePhysics(Item item)
+    {
+        item.GetComponent<Rigidbody>().isKinematic = false;
+        item.GetComponent<Collider>().enabled = true;
     }
 
     [Command]
@@ -389,8 +488,15 @@ public class ItemManager : NetworkBehaviour
             if (hoverCollider.GetComponent<Chat>())
                 displayStr = hoverCollider.GetComponent<Chat>().displayNick;
 
-            if (hoverCollider.GetComponent<Interactable>())
-                displayStr = hoverCollider.GetComponent<Interactable>().name + hoverInteractable;
+            Interactable interactable = hoverCollider.GetComponent<Interactable>();
+
+            if (interactable)
+            {
+                if (interactable is Item)
+                    displayStr = hoverCollider.GetComponent<Interactable>().name + hoverItem;
+                else
+                    displayStr = hoverCollider.GetComponent<Interactable>().name + hoverInteractable;
+            }
         }
 
 
