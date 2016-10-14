@@ -7,10 +7,10 @@ public class GenBlock : MonoBehaviour
     public GameObject blockPrefab;
     public int seed = 0;
 
-    float separation = 10;
-    int size = 10;
+    //float separation = 10;
+    //int size = 10;
 
-    float missingChance = 0.1f;
+    //float missingChance = 0.1f;
 
     public int num = 100;
     public float radius = 200;

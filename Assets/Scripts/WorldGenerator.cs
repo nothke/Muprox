@@ -7,8 +7,8 @@ public class WorldGenerator : MonoBehaviour
 
     float gridUnit = 1;
 
-    float minGridSize = 10;
-    float maxGridSize = 30;
+    //float minGridSize = 10;
+    //float maxGridSize = 30;
 
     [System.Serializable]
     public class PrefabSettings
@@ -64,7 +64,9 @@ public class WorldGenerator : MonoBehaviour
         float half = gridUnit / 2;
         Vector3 position = new Vector3(tile.gridPosX * gridUnit, 0, tile.gridPosY * gridUnit);
 
-        GameObject floor = Instantiate(prefabs.floor, position, Quaternion.identity) as GameObject;
+        //GameObject floor = Instantiate(prefabs.floor, position, Quaternion.identity) as GameObject;
+        Instantiate(prefabs.floor, position, Quaternion.identity);
+
 
         /*
         if (tile.borderUp && tile.up > 0)

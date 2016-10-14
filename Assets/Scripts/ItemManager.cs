@@ -64,18 +64,43 @@ public class ItemManager : NetworkBehaviour
         RaycastHit hit;
         if (Physics.Raycast(raycastFrom.position, raycastFrom.forward, out hit, Mathf.Infinity))
         {
-            if (!hit.collider) return;
 
-            hoverCollider = hit.collider;
+        }
 
-            hoverWeapon = hit.collider.GetComponent<Weapon>();
+        if (!hit.collider) return;
 
-            if (!hoverWeapon) return;
+        hoverCollider = hit.collider;
+
+        // hover weapon
+
+        hoverWeapon = hit.collider.GetComponent<Weapon>();
+
+        if (hoverWeapon)
+        {
 
             if (Input.GetMouseButtonDown(1))
                 Take(hoverWeapon);
         }
 
+        // interactable
+
+        Interactable interactable = hit.collider.GetComponent<Interactable>();
+
+        if (interactable)
+        {
+            if (Input.GetMouseButtonDown(1))
+                if (isServer)
+                    interactable.Act();
+                else
+                    CmdInteract(interactable.gameObject);
+
+        }
+    }
+
+    [Command]
+    void CmdInteract(GameObject interactableObject)
+    {
+        interactableObject.GetComponent<Interactable>().Act();
     }
 
     Vector3 handAimPos = new Vector3(0, -0.1f, 0.5f);
@@ -349,18 +374,24 @@ public class ItemManager : NetworkBehaviour
 
     }
 
-    const string hoverThing = "\n right click to take";
+    const string hoverItem = "\n right click to take";
+    const string hoverInteractable = "\n right click to use";
 
     void OnGUI()
     {
         string displayStr = "";
 
         if (hoverWeapon)
-            displayStr = hoverWeapon.name + (weapon ? "" : hoverThing);
+            displayStr = hoverWeapon.name + (weapon ? "" : hoverItem);
 
         if (hoverCollider)
+        {
             if (hoverCollider.GetComponent<Chat>())
                 displayStr = hoverCollider.GetComponent<Chat>().displayNick;
+
+            if (hoverCollider.GetComponent<Interactable>())
+                displayStr = hoverCollider.GetComponent<Interactable>().name + hoverInteractable;
+        }
 
 
 

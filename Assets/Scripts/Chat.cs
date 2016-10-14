@@ -42,12 +42,22 @@ public class Chat : NetworkBehaviour
             message = "";
         }
 
+
+
         GUILayout.BeginHorizontal();
         GUILayout.Label("Nick");
         nick = GUILayout.TextField(nick, GUILayout.Width(200));
         GUILayout.EndHorizontal();
 
+        GUI.SetNextControlName("MessageField");
         message = GUILayout.TextField(message);
+
+        if (Input.GetKeyDown(KeyCode.T))
+            GUI.FocusControl("MessageField");
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+            GUI.FocusControl("");
+       
 
         foreach (var line in messageQueue)
         {
