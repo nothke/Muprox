@@ -35,25 +35,25 @@ public class ItemManager : NetworkBehaviour
         UpdateRaycast();
 
 
-        if (Input.GetMouseButton(0))
+        if (NInput.GetMouseButton(0))
             Use();
 
-        if (Input.GetMouseButtonUp(0))
+        if (NInput.GetMouseButtonUp(0))
             triggerDown = false;
 
-        if (Input.GetMouseButtonDown(1))
+        if (NInput.GetMouseButtonDown(1))
             StartAim();
 
-        if (Input.GetMouseButtonUp(1))
+        if (NInput.GetMouseButtonUp(1))
             EndAim();
 
-        if (Input.GetKeyDown(KeyCode.Q))
+        if (NInput.GetKeyDown(KeyCode.Q))
         {
             ParentDrop();
             Drop();
         }
 
-        mouseSpeed = new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"), 0);
+        mouseSpeed = new Vector3(NInput.GetAxis("Mouse X"), NInput.GetAxis("Mouse Y"), 0);
     }
 
     Collider hoverCollider;
@@ -79,7 +79,7 @@ public class ItemManager : NetworkBehaviour
         if (hoverWeapon)
         {
 
-            if (Input.GetMouseButtonDown(1))
+            if (NInput.GetMouseButtonDown(1))
                 Take(hoverWeapon);
         }
 
@@ -91,7 +91,7 @@ public class ItemManager : NetworkBehaviour
 
         if (interactable)
         {
-            if (Input.GetMouseButtonDown(1))
+            if (NInput.GetMouseButtonDown(1))
                 if (isServer)
                     interactable.Act();
                 else
@@ -101,7 +101,7 @@ public class ItemManager : NetworkBehaviour
 
         if (interactable is Item)
         {
-            if (Input.GetMouseButtonDown(1))
+            if (NInput.GetMouseButtonDown(1))
             {
                 Item item = interactable as Item;
                 Take(item);

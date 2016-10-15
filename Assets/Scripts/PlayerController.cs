@@ -39,10 +39,10 @@ public class PlayerController : NetworkBehaviour
         if (!isLocalPlayer)
             return;
 
-        float iH = Input.GetAxis("Horizontal");
-        float iV = Input.GetAxis("Vertical");
+        float iH = NInput.GetAxis("Horizontal");
+        float iV = NInput.GetAxis("Vertical");
 
-        speedMult = Input.GetKey(KeyCode.LeftShift) ? runSpeedMult : walkSpeedMult;
+        speedMult = NInput.GetKey(KeyCode.LeftShift) ? runSpeedMult : walkSpeedMult;
 
         Vector3 iVec = new Vector3(iH, 0, iV);
 
@@ -55,7 +55,7 @@ public class PlayerController : NetworkBehaviour
         {
             vSpeed = 0;
 
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (NInput.GetKeyDown(KeyCode.Space))
                 vSpeed = 8;
         }
 
@@ -68,8 +68,8 @@ public class PlayerController : NetworkBehaviour
         controller.Move(move * Time.deltaTime);
 
         // MOUSELOOK
-        float rotX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float rotY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        float rotX = NInput.GetAxis("Mouse X") * mouseSensitivity;
+        float rotY = NInput.GetAxis("Mouse Y") * mouseSensitivity;
 
         totalX += rotX;
         totalY += rotY;
@@ -80,7 +80,7 @@ public class PlayerController : NetworkBehaviour
         head.localRotation = yQuaternion;
         transform.localRotation = xQuaternion;
 
-        if (Input.GetKeyDown(KeyCode.B))
+        if (NInput.GetKeyDown(KeyCode.B))
             CmdBoxSpawn();
 
     }

@@ -13,6 +13,9 @@ public class PoolingManager : MonoBehaviour
     public ParticleSystem shotBloodParticle;
     public ParticleSystem explosionParticle;
 
+    public UnityEngine.UI.Text outputUI;
+    public UnityEngine.UI.InputField inputUI;
+
     public enum SurfaceType { Concrete, Metal, Blood };
 
     public void DoSurfaceShotParticle(SurfaceType surface, Vector3 point, Vector3 normal)

@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine.Networking;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class Chat : NetworkBehaviour
 {
@@ -13,6 +14,11 @@ public class Chat : NetworkBehaviour
     string message = "";
 
     static Queue<string> messageQueue = new Queue<string>();
+
+    public bool useGUI = true;
+
+    public InputField inputUI;
+    public Text outputUI;
 
     public override void OnStartClient()
     {
@@ -28,8 +34,44 @@ public class Chat : NetworkBehaviour
 
     string lastNick;
 
+
+    void Update()
+    {
+        if (useGUI) return;
+
+        if (Event.current.Equals(Event.KeyboardEvent("return")) && !string.IsNullOrEmpty(message))
+            ProcessInput(inputUI.text);
+
+
+    }
+
+    void ProcessInput(string inputString)
+    {
+        if (string.IsNullOrEmpty(inputString)) return;
+
+        if (!isLocalPlayer) return;
+
+        if (inputString[0] == '\\')
+        {
+            PushMessage("Invalid command");
+        }
+
+        // if not a command, it's considered to be public chat
+        CmdSendChat(nick + ": " + message);
+    }
+
+
+    void UpdateMessage()
+    {
+        if (!useGUI) return;
+
+        outputUI.text = Convert(messageQueue);
+    }
+
     void OnGUI()
     {
+        if (!useGUI) return;
+
         if (!isLocalPlayer) return;
 
         GUILayout.BeginArea(new Rect(10, 200, 300, 1000));
@@ -57,7 +99,7 @@ public class Chat : NetworkBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape))
             GUI.FocusControl("");
-       
+
 
         foreach (var line in messageQueue)
         {
@@ -112,12 +154,7 @@ public class Chat : NetworkBehaviour
         if (messageQueue.Count == 10)
             messageQueue.Dequeue();
 
-        /*
-        for (int i = 0; i < messages.Length; i++)
-        {
-            if (string.IsNullOrEmpty(messages[i]))
-
-        }*/
+        UpdateMessage();
     }
 
 
