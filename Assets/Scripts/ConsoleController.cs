@@ -45,7 +45,7 @@ public class ConsoleController
     /// How many log lines should be retained?
     /// Note that strings submitted to appendLogLine with embedded newlines will be counted as a single line.
     /// </summary>
-    const int scrollbackSize = 20;
+    const int scrollbackSize = 500;
 
     Queue<string> scrollback = new Queue<string>(scrollbackSize);
     List<string> commandHistory = new List<string>();
@@ -53,7 +53,7 @@ public class ConsoleController
 
     public string[] log { get; private set; } //Copy of scrollback as an array for easier use by ConsoleView
 
-    const string repeatCmdName = "!!"; //Name of the repeat command, constant since it needs to skip these if they are in the command history
+    const string repeatCmdName = "\\!"; //Name of the repeat command, constant since it needs to skip these if they are in the command history
 
     public ConsoleController()
     {
@@ -67,7 +67,7 @@ public class ConsoleController
         //registerCommand("\\resetprefs", resetPrefs, "Reset & saves PlayerPrefs.");
 
         registerCommand("\\host", host, "Start hosting LAN server.");
-        registerCommand("\\join", join, "Join a LAN server. join <full ip> or <short ip> - only last number: 192.168.0.<short ip>");
+        registerCommand("\\join", join, "Join a LAN server. join [full ip] or [short ip] - only last number: 192.168.0.[short ip]");
         registerCommand("\\serveronly", serveronly, "Starts server without joining");
         registerCommand("\\mm", mm, "Starts matchmaker");
         registerCommand("\\dc", dc, "Disconnect client");
@@ -75,8 +75,11 @@ public class ConsoleController
         registerCommand("\\ip", ip, "Your IP");
         registerCommand("\\serverip", serverip, "Server IP");
 
+        registerCommand("\\nick", nick, "Set player nick");
         registerCommand("\\kill", kill, "Kills player or commits suicide. \\kill [playerName] - if none, will kill client");
-
+        registerCommand("\\goto", moveto, "Moves player to position. \\goto [x] [y] [z]");
+        registerCommand("\\spawn", spawn, "Spawns an entity in front of player. \\spawn [entityName]");
+        registerCommand("\\listentities", listentities, "Lists all spawnable entities.");
     }
 
     void registerCommand(string command, CommandHandler handler, string help)
@@ -89,6 +92,58 @@ public class ConsoleController
 
     public enum lineColor { Error, Warning };
 
+    public static string Colorize(string line, lineColor color)
+    {
+        string hex = "#00000000";
+
+        switch (color)
+        {
+            case lineColor.Error: hex = errorColor; break;
+            case lineColor.Warning: hex = warningColor; break;
+        }
+
+        return Colorize(line, hex);
+    }
+
+    public static string Colorize(string line, string hex)
+    {
+        return ("<color=" + hex + ">" + line + "</color>");
+    }
+
+    public static string Colorize(string line, Color color)
+    {
+        return Colorize(line, RGBToHex(color));
+    }
+
+    static string RGBToHex(Color color)
+    {
+        float red = color.r * 255;
+        float green = color.g * 255;
+        float blue = color.b * 255;
+
+        char a, b, c, d, e, f;
+
+        a = GetHex(Mathf.FloorToInt(red / 16));
+        b = GetHex(Mathf.RoundToInt(red % 16));
+        c = GetHex(Mathf.FloorToInt(green / 16));
+        d = GetHex(Mathf.RoundToInt(green % 16));
+        e = GetHex(Mathf.FloorToInt(blue / 16));
+        f = GetHex(Mathf.RoundToInt(blue % 16));
+
+        string hex = "" + a + b + c + d + e + f;
+        Debug.Log(hex);
+
+        return "#" + a + b + c + d + e + f;
+    }
+
+    static char GetHex(int dec)
+    {
+        dec = Mathf.Clamp(dec, 0, 15);
+
+        var alpha = "0123456789ABCDEF";
+        return alpha[dec];
+    }
+
     public void appendLogLine(string line, lineColor color)
     {
         string hex = "#00000000";
@@ -100,6 +155,13 @@ public class ConsoleController
         }
 
         appendLogLine("<color=" + hex + ">" + line + "</color>");
+    }
+
+    public void appendNetworkLogLine(string line)
+    {
+        if (NetworkInactive()) appendLogLine(line);
+        else
+            PlayerController.client.GetComponent<ChatRelay>().CmdSendChat(line);
     }
 
     public void appendLogLine(string line)
@@ -236,7 +298,7 @@ public class ConsoleController
     {
         foreach (CommandRegistration reg in commands.Values)
         {
-            appendLogLine(string.Format("{0}: {1}", reg.command, reg.help));
+            appendLogLine(string.Format("{0}: {1}", Colorize(reg.command, lineColor.Warning), reg.help));
         }
     }
 
@@ -262,6 +324,14 @@ public class ConsoleController
         }
     }
 
+    public string GetPrevCommand()
+    {
+        if (commandHistory == null || commandHistory.Count == 0)
+            return "";
+
+        return commandHistory[commandHistory.Count - 1];
+    }
+
     /*
     void reload(string[] args)
     {
@@ -280,8 +350,7 @@ public class ConsoleController
 
     void host(string[] args)
     {
-        // TODO: Must check if host can be started
-        
+        if (NetworkActive()) return;
 
         NetworkManager.singleton.StartHost();
 
@@ -290,7 +359,7 @@ public class ConsoleController
 
     void join(string[] args)
     {
-
+        if (NetworkActive()) return;
 
         if (args != null && args.Length > 0)
         {
@@ -307,6 +376,8 @@ public class ConsoleController
 
     void serveronly(string[] args)
     {
+        if (NetworkActive()) return;
+
         NetworkManager.singleton.StartServer();
     }
 
@@ -326,7 +397,8 @@ public class ConsoleController
     {
         if (NetworkInactive()) return;
 
-        NetworkManager.singleton.StopServer();
+        NetworkManager.singleton.StopHost();
+        //NetworkManager.singleton.StopServer();
     }
 
 
@@ -338,17 +410,112 @@ public class ConsoleController
 
     void serverip(string[] args)
     {
+        if (NetworkInactive()) return;
+
         appendLogLine(NetworkManager.singleton.client.serverIp);
+    }
+
+
+    void nick(string[] args)
+    {
+        if (NetworkInactive()) return;
+
+        if (No(args)) return;
+
+        appendNetworkLogLine(PlayerController.client.nick + " changed nick to " + args[0]);
+
+        PlayerController.client.nick = args[0];
     }
 
     void kill(string[] args)
     {
         //NetworkManager.singleton.
 
-        if (NetworkInactive())
+        if (NetworkInactive()) return;
+
+        PlayerController.client.GetComponent<Health>().TakeDamage(1000);
+
+    }
+
+    void moveto(string[] args)
+    {
+        if (NetworkInactive()) return;
+
+        if (args == null || args.Length == 0)
+        {
+            appendLogLine("No argument submitted");
+            return;
+        }
+
+        Vector3 pos = ParseV3(args);
+
+        PlayerController.client.transform.position = pos;
+    }
+
+    void spawn(string[] args)
+    {
+        if (NetworkInactive()) return;
+
+        if (No(args))
             return;
 
+        foreach (var entity in NetworkManager.singleton.spawnPrefabs)
+        {
+            Vector3 position = PlayerController.client.transform.position + PlayerController.client.transform.forward * 2;
 
+            if (entity.name == args[0])
+            {
+                GameObject go = GameObject.Instantiate(entity, position, Quaternion.identity) as GameObject;
+                NetworkServer.Spawn(go);
+
+                return;
+            }
+        }
+
+        appendLogLine("Entity " + args[0] + " doesn't exist. Type \\listentities to see what exists");
+    }
+
+    bool No(string[] args)
+    {
+
+        if (args == null || args.Length == 0)
+        {
+            appendLogLine("No argument submitted");
+            return true;
+        }
+
+        return false;
+    }
+
+    void listentities(string[] args)
+    {
+        foreach (var entity in NetworkManager.singleton.spawnPrefabs)
+        {
+            appendLogLine(entity.name);
+        }
+    }
+
+    Vector3 ParseV3(string[] args)
+    {
+        if (args == null || args.Length == 0)
+        {
+            return Vector3.zero;
+        }
+
+        float x, y, z;
+
+        if (!float.TryParse(args[0], out x))
+            appendLogLine("Parsing failed, used 0", lineColor.Error);
+
+        if (args.Length < 2) y = 0;
+        else if (!float.TryParse(args[1], out y))
+            appendLogLine("Parsing failed, used 0", lineColor.Error);
+
+        if (args.Length < 3) z = 0;
+        else if (!float.TryParse(args[2], out z))
+            appendLogLine("Parsing failed, used 0", lineColor.Error);
+
+        return new Vector3(x, y, z);
     }
 
     bool NetworkInactive()
@@ -363,23 +530,14 @@ public class ConsoleController
 
     }
 
-    /*
-        TODO Commands:
+    bool NetworkActive()
+    {
+        if (NetworkManager.singleton.isNetworkActive)
+        {
+            appendLogLine("Network is already active, disconnect first", lineColor.Error);
+            return true;
+        }
 
-    * host
-    serveronly
-    * join
-    MM - Matchmaker
-    * dc - disconnect
-    * ip
-
-    // OP
-    kill - comit suicide
-    kill <playerNick> - killsPlaer
-    goto origin - teleports to 0,0,0
-    goto <location> - teleports to location
-    goto <Vector3> - teleports player to 
-    
-
-    */
+        return false;
+    }
 }

@@ -18,10 +18,13 @@ public class ConsoleGlobal : MonoBehaviour
     public GameObject consoleUI;
     public InputField inputUI;
     public Text outputUI;
+    public Text hudOutputUI;
 
 
     [HideInInspector]
     public ConsoleController console = new ConsoleController();
+
+    string lastInput = "";
 
     void Start()
     {
@@ -30,6 +33,10 @@ public class ConsoleGlobal : MonoBehaviour
 
         console.visibilityChanged += Console_visibilityChanged;
         console.logChanged += UpdateConsole;
+
+        console.appendLogLine("-----------------------");
+        console.appendLogLine("Open console with 'T' or '\\', close it on 'Esc'");
+        console.appendLogLine("Type \\help to see a list of commands");
     }
 
     void UpdateConsole(string[] newLog)
@@ -38,6 +45,14 @@ public class ConsoleGlobal : MonoBehaviour
             outputUI.text = "";
         else
             outputUI.text = string.Join("\n", newLog);
+
+        if (hudOutputUI)
+
+        {
+            int first = Mathf.Clamp(newLog.Length - 10, 0, 100000);
+            int last = Mathf.Clamp(newLog.Length, 0, 10);
+            hudOutputUI.text = string.Join("\n", newLog, first, last);
+        }
     }
 
     ~ConsoleGlobal()
@@ -63,7 +78,14 @@ public class ConsoleGlobal : MonoBehaviour
             ProcessInput(inputUI.text);
 
         if (UnfocusButtonPressed())
+        {
+            lastInput = inputUI.text;
             Unfocus();
+
+        }
+
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+            inputUI.text = console.GetPrevCommand();
     }
 
     bool UnfocusButtonPressed()
@@ -76,7 +98,10 @@ public class ConsoleGlobal : MonoBehaviour
 
     bool FocusButtonPressed()
     {
-        return NInput.GetKeyDown(KeyCode.T) || NInput.GetKey(KeyCode.Caret);
+        //if (NInput.GetKey(KeyCode.Backslash))
+        //lastInput = "\\";
+
+        return NInput.GetKeyDown(KeyCode.T) || NInput.GetKey(KeyCode.Backslash);
     }
 
     bool UIExists()
@@ -101,24 +126,29 @@ public class ConsoleGlobal : MonoBehaviour
     {
         if (string.IsNullOrEmpty(inputString)) return;
 
-
-
         if (inputString[0] == '\\')
-        {
             console.runCommandString(inputString);
-            //console.
-            //PushMessage("Invalid command");
-        }
         else
             // if not a command, it's considered to be public chat
-            console.appendLogLine(inputString);
-
-        //CmdSendChat(nick + ": " + message);
-        //inputUI.text = inputString;
+            Chat(inputString);
 
         ClearInput();
 
         Focus();
+    }
+
+    void Chat(string inputString)
+    {
+        string message = System.Security.SecurityElement.Escape(inputString);
+
+        string nick = "Me";
+
+        if (PlayerController.client)
+            nick = PlayerController.client.nick;
+
+        message = ConsoleController.Colorize(nick + ": " + message, HashColor(nick));
+
+        console.appendNetworkLogLine(message);
     }
 
     void ClearInput()
@@ -135,14 +165,24 @@ public class ConsoleGlobal : MonoBehaviour
         inputUI.Select();
         inputUI.ActivateInputField();
 
+        inputUI.text = lastInput;
 
+        StartCoroutine(MoveToEnd());
+        //inputUI.caretPosition = inputUI.text.Length;
+    }
+
+    IEnumerator MoveToEnd()
+    {
+        yield return null;
+        inputUI.MoveTextEnd(false);
     }
 
     void Unfocus()
     {
         NInput.bypass = false;
 
-        inputUI.DeactivateInputField();
+        lastInput = inputUI.text;
+        //inputUI.DeactivateInputField();
 
         consoleUI.SetActive(false);
     }

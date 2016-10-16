@@ -5,6 +5,13 @@ using UnityEngine.SceneManagement;
 public class AppUtil : MonoBehaviour
 {
     public bool canRestart;
+
+
+    void Start()
+    {
+        ToggleLockMouse();
+    }
+
     void Update()
     {
         if (canRestart && Input.GetKeyDown(KeyCode.Tab))
@@ -12,8 +19,13 @@ public class AppUtil : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.LeftControl))
         {
-            Cursor.visible = !Cursor.visible;
-            Cursor.lockState = Cursor.visible ? CursorLockMode.None : CursorLockMode.Locked;
+            ToggleLockMouse();
         }
+    }
+
+    void ToggleLockMouse()
+    {
+        Cursor.visible = !Cursor.visible;
+        Cursor.lockState = Cursor.visible ? CursorLockMode.None : CursorLockMode.Locked;
     }
 }

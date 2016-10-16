@@ -4,6 +4,8 @@ using UnityEngine.Networking;
 
 public class PlayerController : NetworkBehaviour
 {
+    public string nick = "Unnamed";
+
     public Transform head;
 
     CharacterController controller;
@@ -32,11 +34,28 @@ public class PlayerController : NetworkBehaviour
 
     public Component[] componentsToDisable;
 
+    public static PlayerController client;
+
     public override void OnStartClient()
     {
         base.OnStartClient();
 
+
         ConsoleGlobal.Log("Client started!");
+
+        if (!isLocalPlayer) return;
+
+        ConsoleGlobal.Log("Client started and is local player!");
+        //ConsoleGlobal.Log("Local player started!");
+
+        client = this;
+    }
+
+    public override void OnStartLocalPlayer()
+    {
+        ConsoleGlobal.Log("Welcome! Please, set you nick by using \\nick [yourName]");
+
+        client = this;
     }
 
     void Update()

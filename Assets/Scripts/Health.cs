@@ -74,6 +74,8 @@ public class Health : NetworkBehaviour
 
             currentHealth = maxHealth;
         }
+
+        ConsoleGlobal.Log(gameObject.GetComponent<PlayerController>().nick + " died");
     }
 
     IEnumerator HidePlayer()
