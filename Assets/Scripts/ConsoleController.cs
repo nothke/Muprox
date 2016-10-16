@@ -66,6 +66,8 @@ public class ConsoleController
         //registerCommand("reload", reload, "Reload game.");
         //registerCommand("\\resetprefs", resetPrefs, "Reset & saves PlayerPrefs.");
 
+        registerCommand("\\controls", controls, "List controls.");
+
         registerCommand("\\host", host, "Start hosting LAN server.");
         registerCommand("\\join", join, "Join a LAN server. join [full ip] or [short ip] - only last number: 192.168.0.[short ip]");
         registerCommand("\\serveronly", serveronly, "Starts server without joining");
@@ -76,10 +78,14 @@ public class ConsoleController
         registerCommand("\\serverip", serverip, "Server IP");
 
         registerCommand("\\nick", nick, "Set player nick");
-        registerCommand("\\kill", kill, "Kills player or commits suicide. \\kill [playerName] - if none, will kill client");
+        registerCommand("\\kill", kill, "Commit suicide"); // Kills player or commits suicide. \\kill [playerName] - if none, will kill client
         registerCommand("\\goto", moveto, "Moves player to position. \\goto [x] [y] [z]");
         registerCommand("\\spawn", spawn, "Spawns an entity in front of player. \\spawn [entityName]");
         registerCommand("\\listentities", listentities, "Lists all spawnable entities.");
+
+        registerCommand("\\networkgui", networkgui, "Toggles legacy network GUI.");
+
+        registerCommand("\\quit", quit, "Quits application");
     }
 
     void registerCommand(string command, CommandHandler handler, string help)
@@ -348,6 +354,22 @@ public class ConsoleController
 
     //// MY HANDLERS!!!
 
+    // CONTROLS
+    void controls(string[] args)
+    {
+        appendLogLine("---------------");
+        appendLogLine("WASD - walk around");
+        appendLogLine("Space - jump");
+        appendLogLine("mouse buttons - interact");
+        appendLogLine("q - drop item");
+        appendLogLine("\\ or t - open console");
+        appendLogLine("Esc - close console");
+        appendLogLine("Left ctrl - lock/unlock mouse");
+    }
+
+
+    // SERVER STUFF
+
     void host(string[] args)
     {
         if (NetworkActive()) return;
@@ -494,6 +516,26 @@ public class ConsoleController
             appendLogLine(entity.name);
         }
     }
+
+    void quit(string[] args)
+    {
+        Application.Quit();
+    }
+
+    void networkgui(string[] args)
+    {
+        NetworkManager.singleton.GetComponent<NetworkManagerHUD>().enabled =
+            !NetworkManager.singleton.GetComponent<NetworkManagerHUD>().enabled;
+    }
+
+
+
+
+
+
+
+
+    // UTILS
 
     Vector3 ParseV3(string[] args)
     {
