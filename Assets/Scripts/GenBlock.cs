@@ -21,8 +21,12 @@ public class GenBlock : MonoBehaviour
     {
         Random.InitState(seed);
 
+        ConsoleGlobal.e.console.appendLogLine("Generating blocks..");
+
         for (int i = 0; i < num; i++)
         {
+
+
 
         RedoPosition:
 
@@ -42,6 +46,8 @@ public class GenBlock : MonoBehaviour
             }
 
         }
+
+        ConsoleGlobal.e.console.appendLogLine("Generated " + num + " blocks");
 
         /*
         for (int y = 0; y < size; y++)

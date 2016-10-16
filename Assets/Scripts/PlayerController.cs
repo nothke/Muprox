@@ -32,7 +32,12 @@ public class PlayerController : NetworkBehaviour
 
     public Component[] componentsToDisable;
 
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
 
+        ConsoleGlobal.Log("Client started!");
+    }
 
     void Update()
     {

@@ -6,17 +6,22 @@ using UnityEngine.UI;
 
 public class ConsoleGlobal : MonoBehaviour
 {
+    public static ConsoleGlobal e;
+    void Awake() { e = this; }
+
     string message = "";
 
     static Queue<string> messageQueue = new Queue<string>();
 
     //public bool useGUI = true;
 
+    public GameObject consoleUI;
     public InputField inputUI;
     public Text outputUI;
 
 
-    ConsoleController console = new ConsoleController();
+    [HideInInspector]
+    public ConsoleController console = new ConsoleController();
 
     void Start()
     {
@@ -51,17 +56,23 @@ public class ConsoleGlobal : MonoBehaviour
         if (!UIExists()) return;
 
         if (FocusButtonPressed())
-        {
             Focus();
-        }
 
 
         if (EnterIsPressed() && !InputIsEmpty())
             ProcessInput(inputUI.text);
 
-
+        if (UnfocusButtonPressed())
+            Unfocus();
     }
 
+    bool UnfocusButtonPressed()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+            return true;
+
+        return false;
+    }
 
     bool FocusButtonPressed()
     {
@@ -90,20 +101,24 @@ public class ConsoleGlobal : MonoBehaviour
     {
         if (string.IsNullOrEmpty(inputString)) return;
 
-        console.runCommandString(inputString);
+
 
         if (inputString[0] == '\\')
         {
-
+            console.runCommandString(inputString);
             //console.
             //PushMessage("Invalid command");
         }
+        else
+            // if not a command, it's considered to be public chat
+            console.appendLogLine(inputString);
 
-        // if not a command, it's considered to be public chat
         //CmdSendChat(nick + ": " + message);
         //inputUI.text = inputString;
 
         ClearInput();
+
+        Focus();
     }
 
     void ClearInput()
@@ -115,8 +130,21 @@ public class ConsoleGlobal : MonoBehaviour
     {
         NInput.bypass = true;
 
+        consoleUI.SetActive(true);
+
         inputUI.Select();
         inputUI.ActivateInputField();
+
+
+    }
+
+    void Unfocus()
+    {
+        NInput.bypass = false;
+
+        inputUI.DeactivateInputField();
+
+        consoleUI.SetActive(false);
     }
 
     void UpdateMessage()
@@ -171,5 +199,10 @@ public class ConsoleGlobal : MonoBehaviour
         }
 
         return str;
+    }
+
+    public static void Log(string str)
+    {
+        e.console.appendLogLine(str);
     }
 }

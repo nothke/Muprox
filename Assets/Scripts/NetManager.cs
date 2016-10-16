@@ -37,6 +37,13 @@ public class NetManager : NetworkManager
         base.OnStartClient(client);
     }
 
+    public override void OnServerAddPlayer(NetworkConnection conn, short playerControllerId)
+    {
+        ConsoleGlobal.Log("Player has connected: " + conn.address + " : " + playerControllerId);
+
+        base.OnServerAddPlayer(conn, playerControllerId);
+    }
+
     public void ShowSceneCamera(bool enable)
     {
         if (sceneCamera)

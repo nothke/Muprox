@@ -8,8 +8,7 @@ using UnityEngine.Networking;
 using System;
 using System.Collections.Generic;
 using System.Text;
-
-
+using System.Collections;
 
 public delegate void CommandHandler(string[] args);
 
@@ -59,22 +58,48 @@ public class ConsoleController
     public ConsoleController()
     {
         //When adding commands, you must add a call below to registerCommand() with its name, implementation method, and help text.
-        registerCommand("babble", babble, "Example command that demonstrates how to parse arguments. babble [word] [# of times to repeat]");
-        registerCommand("echo", echo, "echoes arguments back as array (for testing argument parser)");
-        registerCommand("help", help, "Print this help.");
-        registerCommand("hide", hide, "Hide the console.");
+        registerCommand("\\babble", babble, "Example command that demonstrates how to parse arguments. babble [word] [# of times to repeat]");
+        registerCommand("\\echo", echo, "echoes arguments back as array (for testing argument parser)");
+        registerCommand("\\help", help, "Print this help.");
+        //registerCommand("\\hide", hide, "Hide the console.");
         registerCommand(repeatCmdName, repeatCommand, "Repeat last command.");
         //registerCommand("reload", reload, "Reload game.");
-        registerCommand("resetprefs", resetPrefs, "Reset & saves PlayerPrefs.");
+        //registerCommand("\\resetprefs", resetPrefs, "Reset & saves PlayerPrefs.");
 
-        registerCommand("host", host, "Start hosting LAN server.");
-        registerCommand("join", join, "Join a LAN server. join <full ip> or <short ip> - only last number: 192.168.0.<short ip>");
-        registerCommand("dc", dc, "Disconnect client");
+        registerCommand("\\host", host, "Start hosting LAN server.");
+        registerCommand("\\join", join, "Join a LAN server. join <full ip> or <short ip> - only last number: 192.168.0.<short ip>");
+        registerCommand("\\serveronly", serveronly, "Starts server without joining");
+        registerCommand("\\mm", mm, "Starts matchmaker");
+        registerCommand("\\dc", dc, "Disconnect client");
+        registerCommand("\\ds", ds, "Disconnect server");
+        registerCommand("\\ip", ip, "Your IP");
+        registerCommand("\\serverip", serverip, "Server IP");
+
+        registerCommand("\\kill", kill, "Kills player or commits suicide. \\kill [playerName] - if none, will kill client");
+
     }
 
     void registerCommand(string command, CommandHandler handler, string help)
     {
         commands.Add(command, new CommandRegistration(command, handler, help));
+    }
+
+    const string errorColor = "#a52a2aff";
+    const string warningColor = "#550055ff";
+
+    public enum lineColor { Error, Warning };
+
+    public void appendLogLine(string line, lineColor color)
+    {
+        string hex = "#00000000";
+
+        switch (color)
+        {
+            case lineColor.Error: hex = errorColor; break;
+            case lineColor.Warning: hex = warningColor; break;
+        }
+
+        appendLogLine("<color=" + hex + ">" + line + "</color>");
     }
 
     public void appendLogLine(string line)
@@ -102,7 +127,7 @@ public class ConsoleController
         string[] args = new string[0];
         if (commandSplit.Length < 1)
         {
-            appendLogLine(string.Format("Unable to process command '{0}'", commandString));
+            appendLogLine(string.Format("<color=#a52a2aff>Unable to process command '{0}'</color>", commandString));
             return;
 
         }
@@ -121,13 +146,13 @@ public class ConsoleController
         CommandRegistration reg = null;
         if (!commands.TryGetValue(command, out reg))
         {
-            appendLogLine(string.Format("Unknown command '{0}', type 'help' for list.", command));
+            appendLogLine(string.Format("<color=#a52a2aff>Unknown command '{0}', type '\\help' for list.</color>", command));
         }
         else
         {
             if (reg.handler == null)
             {
-                appendLogLine(string.Format("Unable to process command '{0}', handler was null.", command));
+                appendLogLine(string.Format("<color=#a52a2aff>Unable to process command '{0}', handler was null.</color>", command));
             }
             else
             {
@@ -253,61 +278,90 @@ public class ConsoleController
 
     //// MY HANDLERS!!!
 
-    NetManager manager;
-
-    void SetManager()
-    {
-        if (!manager)
-            manager = GameObject.Find("NETWORK").GetComponent<NetManager>();
-    }
-
     void host(string[] args)
     {
-        SetManager();
-
         // TODO: Must check if host can be started
+        
 
-        manager.StartHost();
+        NetworkManager.singleton.StartHost();
+
+        appendLogLine("..Starting host at " + NetworkManager.singleton.networkAddress);
     }
 
     void join(string[] args)
     {
-        SetManager();
+
 
         if (args != null && args.Length > 0)
         {
             if (args[0].Contains("."))
-                manager.networkAddress = args[0];
+                NetworkManager.singleton.networkAddress = args[0];
             else
-                manager.networkAddress = "192.168.0." + args[0];
+                NetworkManager.singleton.networkAddress = "192.168.0." + args[0];
         }
 
+        NetworkManager.singleton.StartClient();
 
-
-        manager.StartClient();
-    }
-
-    void mm(string[] args)
-    {
-        SetManager();
-
-        manager.StartMatchMaker();
-    }
-
-    void dc(string[] args)
-    {
-        SetManager();
-
-        manager.StopClient();
+        //TillConnected();
     }
 
     void serveronly(string[] args)
     {
-        SetManager();
-
-        manager.StartServer();
+        NetworkManager.singleton.StartServer();
     }
 
+    void mm(string[] args)
+    {
+        NetworkManager.singleton.StartMatchMaker();
+    }
+
+    void dc(string[] args)
+    {
+        if (NetworkInactive()) return;
+
+        NetworkManager.singleton.StopClient();
+    }
+
+    void ds(string[] args)
+    {
+        if (NetworkInactive()) return;
+
+        NetworkManager.singleton.StopServer();
+    }
+
+
+
+    void ip(string[] args)
+    {
+        appendLogLine(Network.player.ipAddress);
+    }
+
+    void serverip(string[] args)
+    {
+        appendLogLine(NetworkManager.singleton.client.serverIp);
+    }
+
+    void kill(string[] args)
+    {
+        //NetworkManager.singleton.
+
+        if (NetworkInactive())
+            return;
+
+
+    }
+
+    bool NetworkInactive()
+    {
+        if (!NetworkManager.singleton.isNetworkActive)
+        {
+            appendLogLine("Network is inactive", lineColor.Error);
+            return true;
+        }
+
+        return false;
+
+    }
 
     /*
         TODO Commands:
@@ -317,7 +371,7 @@ public class ConsoleController
     * join
     MM - Matchmaker
     * dc - disconnect
-
+    * ip
 
     // OP
     kill - comit suicide
