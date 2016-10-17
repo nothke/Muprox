@@ -2,21 +2,20 @@
 using System.Collections;
 //using UnityEngine.Networking;
 
-public class Weapon : MonoBehaviour
+public class Weapon : Item
 {
+    public Transform aimPivot;
     public Transform muzzle;
 
-    public Light fireFlash;
-    public ParticleSystem fireParticles;
+    [Header("Weapon data")]
 
     public int ammo = 10;
     public bool infiniteAmmo = false;
 
-    public AudioClip fireShot;
-    public AudioClip fireNoAmmo;
 
-    public Transform aimPivot;
-    public Transform handPivot;
+
+
+    //public Transform handPivot;
 
     [HideInInspector]
     public float cooldown = 0;
@@ -30,6 +29,12 @@ public class Weapon : MonoBehaviour
     public float spread = 0;
     public int buck = 1;
     public float range = 200;
+
+    [Header("Effects")]
+    public Light fireFlash;
+    public ParticleSystem fireParticles;
+    public AudioClip fireShot;
+    public AudioClip fireNoAmmo;
 
     public virtual void Update()
     {
@@ -67,7 +72,6 @@ public class Weapon : MonoBehaviour
         if (fireShot)
         {
             fireShot.PlayOnce(transform.position);
-            //AudioSource.PlayClipAtPoint(fireShot, transform.position);
 
             PoolingManager.e.PlayTail(transform.position);
         }
