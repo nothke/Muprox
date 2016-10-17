@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 
 public class ItemManager : NetworkBehaviour
 {
@@ -16,12 +17,15 @@ public class ItemManager : NetworkBehaviour
 
     public GameObject crosshair;
 
+    public Text UI;
+
     void Start()
     {
         handStartPos = hand.transform.localPosition;
         handTargetPos = handStartPos;
 
         crosshair = GameObject.Find("Crosshair");
+        UI = GameObject.Find("ItemUI").GetComponent<Text>();
     }
 
     public Vector3 handStartPos;
@@ -38,6 +42,7 @@ public class ItemManager : NetworkBehaviour
 
         UpdateRaycast();
 
+        UpdateDescription();
 
         if (NInput.GetMouseButton(0))
             Use();
@@ -487,7 +492,7 @@ public class ItemManager : NetworkBehaviour
     const string hoverItemText = "\n right click to take";
     const string hoverInteractableText = "\n right click to use";
 
-    void OnGUI()
+    void UpdateDescription()
     {
         string displayStr = "";
 
@@ -510,8 +515,6 @@ public class ItemManager : NetworkBehaviour
             }
         }
 
-
-
-        GUI.Label(new Rect(Screen.width / 2, 20, 1000, 100), displayStr);
+        UI.text = displayStr;
     }
 }
