@@ -83,7 +83,9 @@ public class ConsoleController
         registerCommand("\\spawn", spawn, "Spawns an entity in front of player. \\spawn [entityName]");
         registerCommand("\\listentities", listentities, "Lists all spawnable entities.");
 
-        registerCommand("\\networkgui", networkgui, "Toggles legacy network GUI.");
+        registerCommand("\\networkgui", networkgui, "Toggle legacy network GUI. [0/1].");
+
+        registerCommand("\\posteffects", posteffects, "Toggle post effects on or off. [0/1].");
 
         registerCommand("\\quit", quit, "Quits application");
     }
@@ -392,8 +394,6 @@ public class ConsoleController
         }
 
         NetworkManager.singleton.StartClient();
-
-        //TillConnected();
     }
 
     void serveronly(string[] args)
@@ -465,7 +465,7 @@ public class ConsoleController
 
         if (args == null || args.Length == 0)
         {
-            appendLogLine("No argument submitted");
+            appendLogLine("No argument submitted", lineColor.Error);
             return;
         }
 
@@ -483,12 +483,12 @@ public class ConsoleController
 
         foreach (var entity in NetworkManager.singleton.spawnPrefabs)
         {
-            Vector3 position = PlayerController.client.transform.position + PlayerController.client.transform.forward * 2;
+            //Vector3 position = PlayerController.client.transform.position + PlayerController.client.transform.forward * 2;
 
             if (entity.name == args[0])
             {
-                GameObject go = GameObject.Instantiate(entity, position, Quaternion.identity) as GameObject;
-                NetworkServer.Spawn(go);
+                PlayerController.client.SpawnInFront(entity);
+
 
                 return;
             }
@@ -497,17 +497,7 @@ public class ConsoleController
         appendLogLine("Entity " + args[0] + " doesn't exist. Type \\listentities to see what exists");
     }
 
-    bool No(string[] args)
-    {
 
-        if (args == null || args.Length == 0)
-        {
-            appendLogLine("No argument submitted");
-            return true;
-        }
-
-        return false;
-    }
 
     void listentities(string[] args)
     {
@@ -524,8 +514,22 @@ public class ConsoleController
 
     void networkgui(string[] args)
     {
+        bool? b = ParseBool(args);
+        if (b == null) return;
+
+        NetworkManager.singleton.GetComponent<NetworkManagerHUD>().enabled = (bool)b;
+
+        /*
         NetworkManager.singleton.GetComponent<NetworkManagerHUD>().enabled =
-            !NetworkManager.singleton.GetComponent<NetworkManagerHUD>().enabled;
+            !NetworkManager.singleton.GetComponent<NetworkManagerHUD>().enabled;*/
+    }
+
+    void posteffects(string[] args)
+    {
+        bool? b = ParseBool(args);
+        if (b == null) return;
+
+        PlayerController.client.head.GetComponent<UnityEngine.PostProcessing.PostProcessingBehaviour>().enabled = (bool)b;
     }
 
 
@@ -536,6 +540,17 @@ public class ConsoleController
 
 
     // UTILS
+
+    bool? ParseBool(string[] args)
+    {
+        if (No(args)) return null;
+
+        if (args[0] == "0") return false;
+        if (args[0] == "1") return true;
+
+        ExceptionInvalidArgument();
+        return null;
+    }
 
     Vector3 ParseV3(string[] args)
     {
@@ -558,6 +573,28 @@ public class ConsoleController
             appendLogLine("Parsing failed, used 0", lineColor.Error);
 
         return new Vector3(x, y, z);
+    }
+
+    bool No(string[] args)
+    {
+
+        if (args == null || args.Length == 0)
+        {
+            ExceptionNoArgument();
+            return true;
+        }
+
+        return false;
+    }
+
+    void ExceptionNoArgument()
+    {
+        appendLogLine("No argument submitted", lineColor.Error);
+    }
+
+    void ExceptionInvalidArgument()
+    {
+        appendLogLine("Argument is invalid", lineColor.Error);
     }
 
     bool NetworkInactive()

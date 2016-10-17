@@ -4,6 +4,7 @@ using UnityEngine.Networking;
 
 public class PlayerController : NetworkBehaviour
 {
+    [SyncVar]
     public string nick = "Unnamed";
 
     public Transform head;
@@ -98,6 +99,8 @@ public class PlayerController : NetworkBehaviour
         totalX += rotX;
         totalY += rotY;
 
+        totalY = Mathf.Clamp(totalY, -85, 85);
+
         Quaternion yQuaternion = Quaternion.AngleAxis(totalY, Vector3.left);
         Quaternion xQuaternion = Quaternion.AngleAxis(totalX, Vector3.up);
 
@@ -117,6 +120,31 @@ public class PlayerController : NetworkBehaviour
         NetworkServer.Spawn(bullet);
 
         bullet.GetComponent<Rigidbody>().AddForce(head.forward * 1000);
+    }
+
+    [Client]
+    public void SpawnInFront(GameObject prefab)
+    {
+        Debug.Log("SpawnInFront begin");
+
+        CmdSpawnInFront(prefab);
+
+        Debug.Log("SpawnInFront end");
+    }
+
+    [Command]
+    void CmdSpawnInFront(GameObject prefab)
+    {
+        Debug.Log("CmdSpawnInFront begin");
+
+        // TODO: check if it has authority
+
+        Vector3 position = head.position + head.forward * 2;
+
+        var go = Instantiate(prefab, position, head.rotation) as GameObject;
+        NetworkServer.Spawn(go);
+
+        ConsoleGlobal.Log(nick + " has spawned " + prefab.name, true);
     }
 
     void DisableCamera()

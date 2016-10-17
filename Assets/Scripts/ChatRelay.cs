@@ -15,5 +15,4 @@ public class ChatRelay : NetworkBehaviour
     {
         ConsoleGlobal.Log(what);
     }
-
 }

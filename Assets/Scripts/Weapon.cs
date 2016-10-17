@@ -10,6 +10,7 @@ public class Weapon : MonoBehaviour
     public ParticleSystem fireParticles;
 
     public int ammo = 10;
+    public bool infiniteAmmo = false;
 
     public AudioClip fireShot;
     public AudioClip fireNoAmmo;
@@ -28,6 +29,7 @@ public class Weapon : MonoBehaviour
 
     public float spread = 0;
     public int buck = 1;
+    public float range = 200;
 
     public virtual void Update()
     {
@@ -43,20 +45,24 @@ public class Weapon : MonoBehaviour
 
         cooldown = 1;
 
-        if (ammo <= 0)
+        if (!infiniteAmmo)
         {
-            if (fireNoAmmo)
-                AudioSource.PlayClipAtPoint(fireNoAmmo, transform.position);
+            if (ammo <= 0)
+            {
+                if (fireNoAmmo)
+                    AudioSource.PlayClipAtPoint(fireNoAmmo, transform.position);
 
-            return;
+                return;
+            }
+
+            ammo--;
         }
 
-        ammo--;
-
         if (fireFlash)
+        {
             fireFlash.enabled = true;
-
-        StartCoroutine(Flash());
+            StartCoroutine(Flash());
+        }
 
         if (fireShot)
         {

@@ -14,10 +14,14 @@ public class ItemManager : NetworkBehaviour
 
     public Transform raycastFrom;
 
+    public GameObject crosshair;
+
     void Start()
     {
         handStartPos = hand.transform.localPosition;
         handTargetPos = handStartPos;
+
+        crosshair = GameObject.Find("Crosshair");
     }
 
     public Vector3 handStartPos;
@@ -58,15 +62,20 @@ public class ItemManager : NetworkBehaviour
 
     Collider hoverCollider;
 
+    const float raycastDistance = 2;
+
     void UpdateRaycast()
     {
         hoverWeapon = null;
         hoverCollider = null;
 
+        crosshair.SetActive(false);
+
         RaycastHit hit;
 
-        if (!Physics.Raycast(raycastFrom.position, raycastFrom.forward, out hit, Mathf.Infinity))
-            return;
+        Physics.Raycast(raycastFrom.position, raycastFrom.forward, out hit, raycastDistance);
+
+
 
         if (!hit.collider) return;
 
@@ -107,6 +116,9 @@ public class ItemManager : NetworkBehaviour
                 Take(item);
             }
         }
+
+        if (hoverWeapon || interactable)
+            crosshair.SetActive(true);
     }
 
     [Command]
@@ -308,12 +320,11 @@ public class ItemManager : NetworkBehaviour
             _rigidbody.AddForceAtPosition(direction, point);
     }
 
+    // HAND AND RECOIL
+
     Vector3 mouseSpeed;
-
     Vector3 handRefVelo;
-    //Vector3 lastPos;
     float handSmooth = 0.1f;
-
     Vector3 handRecoilPos;
 
     void UpdateHand()
@@ -345,12 +356,16 @@ public class ItemManager : NetworkBehaviour
 
     void DoRecoil()
     {
-        handRecoilPos += new Vector3(0, 0, -0.1f) + Random.onUnitSphere * 0.02f;
+        float mult = weapon ? weapon.recoil : 1;
+
+        handRecoilPos += new Vector3(0, 0, -0.1f * mult) + Random.onUnitSphere * 0.02f;
         handSmooth = 0.01f;
 
         StopCoroutine("Jerk");
         StartCoroutine("Jerk");
     }
+
+    // WEAPON SHOOTING
 
     [Command]
     void CmdGunFire(GameObject _weapon)
@@ -371,16 +386,12 @@ public class ItemManager : NetworkBehaviour
             Vector3 rayDirection = _weapon.muzzle.forward + Random.insideUnitSphere * _weapon.spread;
 
             RaycastHit hit;
-            if (Physics.Raycast(_weapon.muzzle.position, rayDirection, out hit, Mathf.Infinity))
+            if (Physics.Raycast(_weapon.muzzle.position, rayDirection, out hit, _weapon.range))
             {
-
-
                 Rigidbody rb = FindRigidbody(hit.collider);
 
                 if (rb)
-                {
                     CmdPush(rb.gameObject, hit.point, _weapon.muzzle.forward * 300);
-                }
 
                 Health health = hit.collider.GetComponent<Health>();
 
@@ -473,15 +484,15 @@ public class ItemManager : NetworkBehaviour
 
     }
 
-    const string hoverItem = "\n right click to take";
-    const string hoverInteractable = "\n right click to use";
+    const string hoverItemText = "\n right click to take";
+    const string hoverInteractableText = "\n right click to use";
 
     void OnGUI()
     {
         string displayStr = "";
 
         if (hoverWeapon)
-            displayStr = hoverWeapon.name + (weapon ? "" : hoverItem);
+            displayStr = hoverWeapon.name + (weapon ? "" : hoverItemText);
 
         if (hoverCollider)
         {
@@ -493,9 +504,9 @@ public class ItemManager : NetworkBehaviour
             if (interactable)
             {
                 if (interactable is Item)
-                    displayStr = hoverCollider.GetComponent<Interactable>().name + hoverItem;
+                    displayStr = hoverCollider.GetComponent<Interactable>().name + hoverItemText;
                 else
-                    displayStr = hoverCollider.GetComponent<Interactable>().name + hoverInteractable;
+                    displayStr = hoverCollider.GetComponent<Interactable>().name + hoverInteractableText;
             }
         }
 

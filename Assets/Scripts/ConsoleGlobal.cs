@@ -228,7 +228,6 @@ public class ConsoleGlobal : MonoBehaviour
         UpdateMessage();
     }
 
-
     string Convert(Queue<string> lineQueue)
     {
         string str = "";
@@ -241,8 +240,12 @@ public class ConsoleGlobal : MonoBehaviour
         return str;
     }
 
-    public static void Log(string str)
+    public static void Log(string str, bool network = false)
     {
-        e.console.appendLogLine(str);
+        if (!network)
+            e.console.appendLogLine(str);
+        else
+            e.console.appendNetworkLogLine(str);
     }
+
 }

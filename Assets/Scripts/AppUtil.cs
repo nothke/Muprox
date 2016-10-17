@@ -6,10 +6,11 @@ public class AppUtil : MonoBehaviour
 {
     public bool canRestart;
 
+    static bool cursorLocked;
 
     void Start()
     {
-        ToggleLockMouse();
+        SetCursor(false);
     }
 
     void Update()
@@ -19,13 +20,29 @@ public class AppUtil : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.LeftControl))
         {
-            ToggleLockMouse();
+            ToggleCursor();
         }
+
+        /*
+        if (cursorLocked && Cursor.lockState != CursorLockMode.Locked)
+            SetCursor(false);*/
     }
 
-    void ToggleLockMouse()
+    void OnApplicationFocus(bool focus)
     {
-        Cursor.visible = !Cursor.visible;
-        Cursor.lockState = Cursor.visible ? CursorLockMode.None : CursorLockMode.Locked;
+        SetCursor(!cursorLocked);
+    }
+
+    public static void ToggleCursor()
+    {
+        SetCursor(!Cursor.visible);
+    }
+
+    public static void SetCursor(bool enabled)
+    {
+        cursorLocked = !enabled;
+
+        Cursor.visible = enabled;
+        Cursor.lockState = enabled ? CursorLockMode.None : CursorLockMode.Locked;
     }
 }

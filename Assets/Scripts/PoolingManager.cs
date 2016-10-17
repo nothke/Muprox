@@ -44,10 +44,7 @@ public class PoolingManager : MonoBehaviour
     public int GetSurfaceType(Collider collider)
     {
         if (collider.gameObject.layer == LayerMask.NameToLayer("Player"))
-        {
-            Debug.Log("PLAYER!");
             return 2;
-        }
 
         if (collider.sharedMaterial == null)
             return 0;
