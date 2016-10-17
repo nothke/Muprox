@@ -44,6 +44,9 @@ public class ItemManager : NetworkBehaviour
 
         UpdateDescription();
 
+        if (NInput.GetMouseButtonDown(0))
+            UseOnce();
+
         if (NInput.GetMouseButton(0))
             Use();
 
@@ -339,8 +342,16 @@ public class ItemManager : NetworkBehaviour
         hand.localPosition = Vector3.SmoothDamp(hand.localPosition, handTargetPos + handRecoilPos + swayOffset, ref handRefVelo, handSmooth);
     }
 
+    void UseOnce()
+    {
+        if (itemInHands)
+            itemInHands.UseItem();
+    }
+
     void Use()
     {
+
+
         if (weapon && !weapon.CanBeFired()) return;
 
         if (weapon && !weapon.repeat && triggerDown) return;
