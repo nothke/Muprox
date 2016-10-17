@@ -83,9 +83,10 @@ public class ConsoleController
         registerCommand("\\spawn", spawn, "Spawns an entity in front of player. \\spawn [entityName]");
         registerCommand("\\listentities", listentities, "Lists all spawnable entities.");
 
-        registerCommand("\\networkgui", networkgui, "Toggle legacy network GUI. [0/1].");
+        registerCommand("\\networkgui", networkgui, "Toggle legacy network GUI. [0/1]");
 
-        registerCommand("\\posteffects", posteffects, "Toggle post effects on or off. [0/1].");
+        registerCommand("\\posteffects", posteffects, "Toggle post effects. [0/1]");
+        registerCommand("\\fog", fog, "Toggle fog. [0/1]");
 
         registerCommand("\\quit", quit, "Quits application");
     }
@@ -518,10 +519,6 @@ public class ConsoleController
         if (b == null) return;
 
         NetworkManager.singleton.GetComponent<NetworkManagerHUD>().enabled = (bool)b;
-
-        /*
-        NetworkManager.singleton.GetComponent<NetworkManagerHUD>().enabled =
-            !NetworkManager.singleton.GetComponent<NetworkManagerHUD>().enabled;*/
     }
 
     void posteffects(string[] args)
@@ -530,6 +527,15 @@ public class ConsoleController
         if (b == null) return;
 
         PlayerController.client.head.GetComponent<UnityEngine.PostProcessing.PostProcessingBehaviour>().enabled = (bool)b;
+    }
+
+    void fog(string[] args)
+    {
+        bool? b = ParseBool(args);
+        if (b == null) return;
+
+        PlayerController.client.head.GetComponent<UnityStandardAssets.ImageEffects.GlobalFog>().enabled = (bool)b;
+        appendNetworkLogLine(PlayerController.client.nick + " has switched fog " + ((bool)b ? "on" : "off"));
     }
 
 
