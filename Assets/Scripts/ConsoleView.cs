@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class ConsoleView : NetworkBehaviour
 {
-    string message = "";
+    //string message = "";
 
     static Queue<string> messageQueue = new Queue<string>();
 

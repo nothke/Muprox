@@ -9,7 +9,7 @@ public class ConsoleGlobal : MonoBehaviour
     public static ConsoleGlobal e;
     void Awake() { e = this; }
 
-    string message = "";
+    //string message = "";
 
     static Queue<string> messageQueue = new Queue<string>();
 

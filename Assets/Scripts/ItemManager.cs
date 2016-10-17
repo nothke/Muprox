@@ -6,10 +6,10 @@ using UnityEngine.UI;
 public class ItemManager : NetworkBehaviour
 {
 
-    Weapon weapon;
+    //Weapon weapon;
     Item itemInHands;
 
-    Weapon hoverWeapon;
+    //Weapon hoverWeapon;
 
     public Transform hand;
 
@@ -60,10 +60,7 @@ public class ItemManager : NetworkBehaviour
             EndAim();
 
         if (NInput.GetKeyDown(KeyCode.Q))
-        {
-            ParentDrop();
             Drop();
-        }
 
         mouseSpeed = new Vector3(NInput.GetAxis("Mouse X"), NInput.GetAxis("Mouse Y"), 0);
     }
@@ -74,7 +71,6 @@ public class ItemManager : NetworkBehaviour
 
     void UpdateRaycast()
     {
-        hoverWeapon = null;
         hoverCollider = null;
 
         crosshair.SetActive(false);
@@ -88,19 +84,6 @@ public class ItemManager : NetworkBehaviour
         if (!hit.collider) return;
 
         hoverCollider = hit.collider;
-
-        // hover weapon
-
-        hoverWeapon = hit.collider.GetComponent<Weapon>();
-
-        if (hoverWeapon)
-        {
-
-            if (NInput.GetMouseButtonDown(1))
-                Take(hoverWeapon);
-        }
-
-
 
         // interactable
 
@@ -125,7 +108,7 @@ public class ItemManager : NetworkBehaviour
             }
         }
 
-        if (hoverWeapon || interactable)
+        if (interactable)
             crosshair.SetActive(true);
     }
 
@@ -146,43 +129,15 @@ public class ItemManager : NetworkBehaviour
         }
 
         PositionItemAtHand(item);
-        //SetAimPos(item); // no aim for items??
+
+        if (item is Weapon)
+            SetAimPos(item as Weapon);
+
         DisablePhysics(item);
 
         CmdSetItemParent(item.gameObject, netId);
 
         itemInHands = item;
-    }
-
-    // TBO
-    void Take(Weapon _weapon)
-    {
-        if (weapon)
-        {
-            Debug.Log("Already holding a weapon");
-            return;
-        }
-
-        PositionWeaponAtHand(_weapon);
-        SetAimPos(_weapon);
-        DisablePhysics(_weapon);
-
-        CmdSetParent(_weapon.gameObject, netId);
-
-        weapon = _weapon;
-    }
-
-    // TBO
-    void ParentDrop()
-    {
-        if (!weapon) return;
-
-        weapon.transform.parent = null;
-        EnablePhysics(weapon);
-
-        CmdNullifyParent(weapon.gameObject);
-
-        weapon = null;
     }
 
     void Drop()
@@ -350,7 +305,11 @@ public class ItemManager : NetworkBehaviour
 
     void Use()
     {
+        if (!itemInHands) return;
 
+        if (!(itemInHands is Weapon)) return;
+
+        Weapon weapon = itemInHands as Weapon;
 
         if (weapon && !weapon.CanBeFired()) return;
 
@@ -360,7 +319,7 @@ public class ItemManager : NetworkBehaviour
 
         DoRecoil();
 
-        if (weapon)
+        if (weapon) // TODO: improve this code?
         {
             CmdGunFire(weapon.gameObject);
 
@@ -372,7 +331,7 @@ public class ItemManager : NetworkBehaviour
 
     void DoRecoil()
     {
-        float mult = weapon ? weapon.recoil : 1;
+        float mult = itemInHands is Weapon ? (itemInHands as Weapon).recoil : 1;
 
         handRecoilPos += new Vector3(0, 0, -0.1f * mult) + Random.onUnitSphere * 0.02f;
         handSmooth = 0.01f;
@@ -404,7 +363,7 @@ public class ItemManager : NetworkBehaviour
             RaycastHit hit;
             if (Physics.Raycast(_weapon.muzzle.position, rayDirection, out hit, _weapon.range))
             {
-                Rigidbody rb = FindRigidbody(hit.collider);
+                Rigidbody rb = hit.collider.GetComponentInParent<Rigidbody>();
 
                 if (rb)
                     CmdPush(rb.gameObject, hit.point, _weapon.muzzle.forward * 300);
@@ -429,24 +388,6 @@ public class ItemManager : NetworkBehaviour
         playerObject.GetComponent<Health>().TakeDamage(amount);
     }
 
-    Rigidbody FindRigidbody(Collider collider)
-    {
-        Rigidbody rb = collider.GetComponent<Rigidbody>();
-
-        Transform lastParent = collider.transform;
-        lastParent = collider.transform.parent;
-
-        for (int i = 0; i < 100; i++)
-        {
-            if (rb) break;
-            if (!lastParent) break;
-
-            rb = lastParent.GetComponent<Rigidbody>();
-            lastParent = lastParent.parent;
-        }
-
-        return rb;
-    }
 
     IEnumerator Jerk()
     {
@@ -466,17 +407,6 @@ public class ItemManager : NetworkBehaviour
     }
 
     [Command]
-    void CmdDestroyWeapon(GameObject weaponGO)
-    {
-        //Destroy(weaponGO.GetComponent<NetworkTransform>());
-
-        //weaponGO.GetComponent<>
-
-        Destroy(weaponGO);
-        //RpcDestroyWeapon();
-    }
-
-    [Command]
     void CmdDoVisual(int surfaceType, Vector3 atPoint, Vector3 normal)
     {
         RpcDoVisual(surfaceType, atPoint, normal);
@@ -488,18 +418,6 @@ public class ItemManager : NetworkBehaviour
         PoolingManager.e.DoSurfaceShotParticle((PoolingManager.SurfaceType)surfaceType, atPoint, normal);
     }
 
-    [ClientRpc]
-    void RpcDestroyWeapon()
-    {
-        Destroy(hoverWeapon.gameObject);
-    }
-
-    [ClientRpc]
-    void RpcTakeWeapon()
-    {
-
-    }
-
     const string hoverItemText = "\n right click to take";
     const string hoverInteractableText = "\n right click to use";
 
@@ -507,25 +425,51 @@ public class ItemManager : NetworkBehaviour
     {
         string displayStr = "";
 
-        if (hoverWeapon)
-            displayStr = hoverWeapon.name + (weapon ? "" : hoverItemText);
-
         if (hoverCollider)
         {
-            if (hoverCollider.GetComponent<Chat>())
-                displayStr = hoverCollider.GetComponent<Chat>().displayNick;
+            // TODO: replace with player nick
+            //if (hoverCollider.GetComponent<Chat>())
+            //  displayStr = hoverCollider.GetComponent<Chat>().displayNick;
 
             Interactable interactable = hoverCollider.GetComponent<Interactable>();
 
             if (interactable)
             {
-                if (interactable is Item)
-                    displayStr = hoverCollider.GetComponent<Interactable>().name + hoverItemText;
-                else
-                    displayStr = hoverCollider.GetComponent<Interactable>().name + hoverInteractableText;
+                string itemInstruction = "";
+
+                if (!itemInHands)
+                {
+                    if (interactable is Item)
+                        itemInstruction = hoverItemText;
+                    else itemInstruction = hoverInteractableText;
+                }
+
+                displayStr = interactable.name + itemInstruction;
             }
         }
 
         UI.text = displayStr;
     }
+
+    // Utils
+
+    /*
+Rigidbody FindRigidbody(Collider collider)
+{
+    Rigidbody rb = collider.GetComponent<Rigidbody>();
+
+    Transform lastParent = collider.transform;
+    lastParent = collider.transform.parent;
+
+    for (int i = 0; i < 100; i++)
+    {
+        if (rb) break;
+        if (!lastParent) break;
+
+        rb = lastParent.GetComponent<Rigidbody>();
+        lastParent = lastParent.parent;
+    }
+
+    return rb;
+}*/
 }
