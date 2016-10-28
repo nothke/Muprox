@@ -138,6 +138,13 @@ public class ItemManager : NetworkBehaviour
         CmdSetItemParent(item.gameObject, netId);
 
         itemInHands = item;
+
+        // find all items in object
+        Item[] items = item.gameObject.GetComponents<Item>();
+        foreach (var itemComponent in items)
+        {
+            itemComponent.OnPickUp();
+        }
     }
 
     void Drop()
@@ -148,6 +155,13 @@ public class ItemManager : NetworkBehaviour
         EnablePhysics(itemInHands);
 
         CmdNullifyParent(itemInHands.gameObject);
+
+        // find all items in object
+        Item[] items = itemInHands.gameObject.GetComponents<Item>();
+        foreach (var itemComponent in items)
+        {
+            itemComponent.OnDrop();
+        }
 
         itemInHands = null;
     }

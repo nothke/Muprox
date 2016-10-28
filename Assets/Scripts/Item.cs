@@ -21,5 +21,9 @@ public class Item : Interactable
         Debug.Log("This is a test");
     }
 
+    public virtual void OnPickUp() { }
+
+    public virtual void OnDrop() { }
+
     public virtual void ActItem() { }
 }
