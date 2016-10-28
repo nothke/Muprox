@@ -9,8 +9,6 @@ public class CityGen : MonoBehaviour
     void Start()
     {
         city = new City(4, 4);
-
-
     }
 
     void OnDrawGizmos()

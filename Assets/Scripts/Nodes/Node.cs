@@ -11,48 +11,14 @@ public class Grid
         nodes = new Node[xNum, yNum];
 
         for (int y = 0; y < yNum; y++)
-        {
             for (int x = 0; x < xNum; x++)
-            {
                 nodes[x, y] = new Node(x, y);
-            }
-        }
     }
 
     public void Interconnect()
     {
         foreach (var node in nodes)
-        {
             node.AssignSelfNodes(nodes);
-        }
-    }
-
-    public enum Connection { Diagonal, Orthogonal, Horizontal, Vertical, NW_SE, SW_NE };
-
-    public void Connect(Connection connection, Grid grid)
-    {
-        switch (connection)
-        {
-            case Connection.Diagonal:
-                for (int y = 0; y < nodes.GetLength(0); y++)
-                {
-                    for (int x = 0; x < nodes.GetLength(1); x++)
-                    {
-                        nodes[x, y].SW = grid.nodes[x, y];
-                        nodes[x, y].SE = grid.nodes[x + 1, y];
-                        nodes[x, y].NW = grid.nodes[x, y + 1];
-                        nodes[x, y].NE = grid.nodes[x + 1, y + 1];
-                    }
-                }
-
-                break;
-
-
-
-                break;
-            default:
-                break;
-        }
     }
 }
 
@@ -151,16 +117,6 @@ public class Node
     }
 }
 
-public class Cell : Node
-{
-
-}
-
-public class Edge : Node
-{
-    bool exists;
-}
-
 public class Corner : Node
 {
     bool exists;
@@ -185,6 +141,25 @@ public class Plot : Node
 
 public class City
 {
+    //
+    // 4 intermeshed grids:
+    //
+    // + - + - + - + - +
+    // | P | P | P | P |
+    // + - + - + - + - +
+    // | P | P | P | P |
+    // + - + - + - + - +
+    // | P | P | P | P |
+    // + - + - + - + - +
+    //
+    //                      quantity:
+    // P: plot              x * y
+    // +: corner            (x + 1) * (y + 1)
+    // -: horizontal edge   x * (y + 1)
+    // |: vertical edge     (x + 1) * y
+    //
+    //
+
     public Plot[,] tileNodes;
     public Corner[,] cornerNodes;
     public Street[,] horizontalStreets;
