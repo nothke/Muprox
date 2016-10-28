@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// Not used
 public class Grid
 {
     public Node[,] nodes;
@@ -167,10 +168,10 @@ public class City
 
     public City(int xNum, int yNum)
     {
+        // CREATE
+
         tileNodes = new Plot[xNum, yNum];
-
         cornerNodes = new Corner[xNum + 1, yNum + 1];
-
         horizontalStreets = new Street[xNum, yNum + 1];
         verticalStreets = new Street[xNum + 1, yNum];
 
@@ -189,6 +190,10 @@ public class City
         for (int y = 0; y < yNum; y++)
             for (int x = 0; x < xNum + 1; x++)
                 verticalStreets[x, y] = new Street(x, y);
+
+        // RELATIONSHIPS
+
+        // Plot relationships
 
         for (int y = 0; y < yNum; y++)
         {
@@ -210,7 +215,7 @@ public class City
             }
         }
 
-        // Street references
+        // Street-Corner relationships
 
         // horizontal
         for (int y = 0; y < yNum + 1; y++)
@@ -232,6 +237,6 @@ public class City
             }
         }
 
-        // ^ all corner neighbours should be set
+        // ^ all neighbors except horizontal - vertical street are now set, but that one is not really needed
     }
 }
