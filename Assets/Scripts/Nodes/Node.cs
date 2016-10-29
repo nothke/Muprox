@@ -141,19 +141,17 @@ public class Corner : Node
 
     public bool HasNeighbourStreets()
     {
-        if (!N)
-        Debug.Log("NO N");
-
         Street sN = N as Street;
         Street sE = E as Street;
         Street sS = S as Street;
         Street sW = W as Street;
 
-        if (!sN)
-            Debug.Log("NO sN");
+        if (sN && sN.exists) return true;
+        if (sE && sE.exists) return true;
+        if (sS && sS.exists) return true;
+        if (sW && sW.exists) return false;
 
-        return (sN && sN.exists) || (sE && sE.exists)
-            || (sS && sS.exists) || (sW && sW.exists);
+        return false;
     }
 }
 

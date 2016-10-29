@@ -51,6 +51,9 @@ public class CityGen : MonoBehaviour
             }
         }
 
+        DoStreets(city.horizontalStreets);
+        DoStreets(city.verticalStreets);
+
         foreach (var corner in city.corners)
         {
             if (!corner.HasNeighbourStreets()) continue;
@@ -62,9 +65,6 @@ public class CityGen : MonoBehaviour
         }
 
         float dist = (tileSize - streetWidth) / 2;
-
-        DoStreets(city.horizontalStreets);
-        DoStreets(city.verticalStreets);
     }
 
     void DoStreets(Street[,] streets)
