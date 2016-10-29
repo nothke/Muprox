@@ -32,6 +32,10 @@ public class Node
 
     public Node(int x, int y) { this.x = x; this.y = y; }
 
+    public static implicit operator bool(Node node)
+    {
+        return node != null;
+    }
 
     public void SetN(Node n)
     {
@@ -112,6 +116,11 @@ public class Node
             field[x - 1, y + 1];
     }
 
+    public virtual Vector3 Position()
+    {
+        return new Vector3(x, 0, y);
+    }
+
     public override string ToString()
     {
         return "Node(" + x + ", " + y + ")";
@@ -123,21 +132,64 @@ public class Corner : Node
     bool exists;
 
     public Corner(int x, int y) : base(x, y) { }
+
+    public override Vector3 Position()
+    {
+        return new Vector3(x, 0, y);
+    }
+
+
+    public bool HasNeighbourStreets()
+    {
+        if (!N)
+        Debug.Log("NO N");
+
+        Street sN = N as Street;
+        Street sE = E as Street;
+        Street sS = S as Street;
+        Street sW = W as Street;
+
+        if (!sN)
+            Debug.Log("NO sN");
+
+        return (sN && sN.exists) || (sE && sE.exists)
+            || (sS && sS.exists) || (sW && sW.exists);
+    }
 }
 
 public class Street : Node
 {
-    bool exists;
+    public bool exists;
+
+    /// <summary>
+    /// Is it oriented North-South? If not, it is West-East
+    /// </summary>
+    public bool isNS;
 
     public Street(int x, int y) : base(x, y) { }
+
+    public override Vector3 Position()
+    {
+        if (!isNS)
+            // horizontal
+            return new Vector3(x + 0.5f, 0, y);
+        else
+            // vertical
+            return new Vector3(x, 0, y + 0.5f);
+    }
 }
 
 public class Plot : Node
 {
-    public enum Type { Water, Residential, Business, Industrial, Park };
+    public enum Type { Residential, Business, Industrial, Park, Water };
     public Type type;
 
     public Plot(int x, int y) : base(x, y) { }
+
+    public override Vector3 Position()
+    {
+        return new Vector3(x + 0.5f, 0, y + 0.5f);
+    }
 }
 
 public class City
@@ -159,10 +211,9 @@ public class City
     // -: horizontal edge   x * (y + 1)
     // |: vertical edge     (x + 1) * y
     //
-    //
 
-    public Plot[,] tileNodes;
-    public Corner[,] cornerNodes;
+    public Plot[,] plots;
+    public Corner[,] corners;
     public Street[,] horizontalStreets;
     public Street[,] verticalStreets;
 
@@ -170,18 +221,18 @@ public class City
     {
         // CREATE
 
-        tileNodes = new Plot[xNum, yNum];
-        cornerNodes = new Corner[xNum + 1, yNum + 1];
+        plots = new Plot[xNum, yNum];
+        corners = new Corner[xNum + 1, yNum + 1];
         horizontalStreets = new Street[xNum, yNum + 1];
         verticalStreets = new Street[xNum + 1, yNum];
 
         for (int y = 0; y < yNum; y++)
             for (int x = 0; x < xNum; x++)
-                tileNodes[x, y] = new Plot(x, y);
+                plots[x, y] = new Plot(x, y);
 
         for (int y = 0; y < yNum + 1; y++)
             for (int x = 0; x < xNum + 1; x++)
-                cornerNodes[x, y] = new Corner(x, y);
+                corners[x, y] = new Corner(x, y);
 
         for (int y = 0; y < yNum + 1; y++)
             for (int x = 0; x < xNum; x++)
@@ -189,7 +240,10 @@ public class City
 
         for (int y = 0; y < yNum; y++)
             for (int x = 0; x < xNum + 1; x++)
+            {
                 verticalStreets[x, y] = new Street(x, y);
+                verticalStreets[x, y].isNS = true;
+            }
 
         // RELATIONSHIPS
 
@@ -200,18 +254,18 @@ public class City
             for (int x = 0; x < xNum; x++)
             {
                 // diagonals are corners
-                tileNodes[x, y].SetSW(cornerNodes[x, y]);
-                tileNodes[x, y].SetSW(cornerNodes[x + 1, y + 1]);
-                tileNodes[x, y].SetNW(cornerNodes[x, y + 1]);
-                tileNodes[x, y].SetSE(cornerNodes[x + 1, y]);
+                plots[x, y].SetSW(corners[x, y]);
+                plots[x, y].SetNE(corners[x + 1, y + 1]);
+                plots[x, y].SetNW(corners[x, y + 1]);
+                plots[x, y].SetSE(corners[x + 1, y]);
 
                 // vertical streets on the sides
-                tileNodes[x, y].SetW(verticalStreets[x, y]);
-                tileNodes[x, y].SetE(verticalStreets[x + 1, y]);
+                plots[x, y].SetW(verticalStreets[x, y]);
+                plots[x, y].SetE(verticalStreets[x + 1, y]);
 
                 // horizontal streets on the N and S
-                tileNodes[x, y].SetS(horizontalStreets[x, y]);
-                tileNodes[x, y].SetN(horizontalStreets[x, y + 1]);
+                plots[x, y].SetS(horizontalStreets[x, y]);
+                plots[x, y].SetN(horizontalStreets[x, y + 1]);
             }
         }
 
@@ -222,8 +276,8 @@ public class City
         {
             for (int x = 0; x < xNum; x++)
             {
-                horizontalStreets[x, y].SetW(cornerNodes[x, y]);
-                horizontalStreets[x, y].SetE(cornerNodes[x + 1, y]);
+                horizontalStreets[x, y].SetW(corners[x, y]);
+                horizontalStreets[x, y].SetE(corners[x + 1, y]);
             }
         }
 
@@ -232,8 +286,8 @@ public class City
         {
             for (int x = 0; x < xNum + 1; x++)
             {
-                verticalStreets[x, y].SetS(cornerNodes[x, y]);
-                verticalStreets[x, y].SetN(cornerNodes[x, y + 1]);
+                verticalStreets[x, y].SetS(corners[x, y]);
+                verticalStreets[x, y].SetN(corners[x, y + 1]);
             }
         }
 

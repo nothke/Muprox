@@ -965,12 +965,7 @@ namespace MeshXtensions
             return mesh;
         }
 
-        public static Mesh DrawQuad(Vector3 rootPos, float width, float height, Vector3 normalDir, bool bottomPivot, int subTiles, float uvScale)
-        {
-            return DrawQuad(rootPos, width, height, normalDir, 0, bottomPivot, subTiles, uvScale);
-        }
-
-        public static Mesh DrawQuad(Vector3 rootPos, float width, float height, Vector3 normalDir, float deviateNormal, bool bottomPivot, int subTiles, float uvScale)
+        public static Mesh Quad(Vector3 rootPos, float width, float height, Vector3 normalDir, float deviateNormal = 0, bool bottomPivot = false, int subTiles = 1, float uvScale = 1)
         {
             Mesh mesh = new Mesh();
             mesh.Clear();
