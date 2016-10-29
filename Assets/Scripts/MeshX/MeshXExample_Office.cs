@@ -49,7 +49,8 @@ public class MeshXExample_Office : MonoBehaviour
         float totalX = xWidth * xNum;
         float totalZ = zWidth * zNum;
 
-
+        Vector3 start = new Vector3(-xWidth / 2, 0, -zWidth / 2);
+        Vector3 mid = new Vector3((-xWidth / 2) + xWidth * xNum / 2, 0, (-zWidth / 2) + zWidth * zNum / 2);
 
         // Columns
         for (int x = -1; x < xNum; x++)
@@ -57,14 +58,13 @@ public class MeshXExample_Office : MonoBehaviour
             for (int z = -1; z < zNum; z++)
             {
                 Mesh column = MeshX.Cube(new Vector3(columnWidth, totalHeight - floorHeight, columnWidth));
-                column.Translate(new Vector3(x * xWidth + xWidth / 2, (totalHeight - floorHeight) / 2, z * zWidth + zWidth / 2));
+                column.Translate(-start + new Vector3(x * xWidth + xWidth / 2, (totalHeight - floorHeight) / 2, z * zWidth + zWidth / 2));
 
                 meshes.Add(column);
             }
         }
 
-        Vector3 start = new Vector3(-xWidth / 2, 0, -zWidth / 2);
-        Vector3 mid = new Vector3((-xWidth / 2) + xWidth * xNum / 2, 0, (-zWidth / 2) + zWidth * zNum / 2);
+
 
         for (int f = 0; f < floors; f++)
         {
@@ -79,7 +79,7 @@ public class MeshXExample_Office : MonoBehaviour
                     if (x == stairWellX && z == stairWellZ) continue;
 
                     Mesh slab = MeshX.Cube(new Vector3(xWidth, slabThickness, zWidth));
-                    slab.Translate(new Vector3(x * xWidth, y - slabThickness * 0.5f, z * zWidth));
+                    slab.Translate(-start + new Vector3(x * xWidth, y - slabThickness * 0.5f, z * zWidth));
 
                     meshes.Add(slab);
                 }
@@ -94,10 +94,10 @@ public class MeshXExample_Office : MonoBehaviour
                 Mesh parapetLeft = MeshX.Cube(new Vector3(parapetWidth, parapetHeight, totalZ));
                 Mesh parapetRight = MeshX.Cube(new Vector3(parapetWidth, parapetHeight, totalZ));
 
-                parapetUp.Translate(mid + new Vector3(0, y, totalZ / 2));
-                parapetDown.Translate(mid + new Vector3(0, y, -totalZ / 2));
-                parapetLeft.Translate(mid + new Vector3(-totalX / 2, y, 0));
-                parapetRight.Translate(mid + new Vector3(+totalX / 2, y, 0));
+                parapetUp.Translate(-start + mid + new Vector3(0, y, totalZ / 2));
+                parapetDown.Translate(-start + mid + new Vector3(0, y, -totalZ / 2));
+                parapetLeft.Translate(-start + mid + new Vector3(-totalX / 2, y, 0));
+                parapetRight.Translate(-start + mid + new Vector3(+totalX / 2, y, 0));
 
                 meshes.Add(parapetUp);
                 meshes.Add(parapetDown);
@@ -112,7 +112,7 @@ public class MeshXExample_Office : MonoBehaviour
             float stairSeparation = xWidth - 1.2f * 2;
 
             Mesh stairs = MeshXBuildings.Stairwell(1.2f, zWidth, floorHeight, 1.2f, stairSeparation, slabThickness);
-            stairs.Translate(start + new Vector3(stairWellX * xWidth + 0.6f, y, stairWellZ * zWidth));
+            stairs.Translate(new Vector3(stairWellX * xWidth + 0.6f, y, stairWellZ * zWidth));
 
             meshes.Add(stairs);
         }

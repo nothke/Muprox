@@ -41,7 +41,4 @@ public class MeshXBuildings : MonoBehaviour
 
         return combined;
     }
-
-
-
 }

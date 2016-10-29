@@ -149,7 +149,7 @@ public class Corner : Node
         if (sN && sN.exists) return true;
         if (sE && sE.exists) return true;
         if (sS && sS.exists) return true;
-        if (sW && sW.exists) return false;
+        if (sW && sW.exists) return true;
 
         return false;
     }
