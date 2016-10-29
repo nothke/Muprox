@@ -67,55 +67,43 @@ public class CityGen : MonoBehaviour
     {
         if (!buildingPrefab) return;
 
-        float facadeLength = 0;
+        Vector3 plotPos = plot.Position() * tileSize;
 
-        while (facadeLength < plotWidth)
+        Vector3 CornerNE = new Vector3(plotWidth / 2, 0.3f, plotWidth / 2);
+        Vector3 CornerSE = new Vector3(plotWidth / 2, 0.3f, -plotWidth / 2);
+        Vector3 CornerSW = new Vector3(-plotWidth / 2, 0.3f, -plotWidth / 2);
+        Vector3 CornerNW = new Vector3(-plotWidth / 2, 0.3f, plotWidth / 2);
+
+        PlaceStripOfficeBuilding(plotPos + CornerSW, Vector3.right, plotWidth, 0);
+        PlaceStripOfficeBuilding(plotPos + CornerNE, Vector3.left, plotWidth, 180);
+    }
+
+    void PlaceStripOfficeBuilding(Vector3 startPosition, Vector3 direction, float stripLength, float angle)
+    {
+        float totalLength = 0;
+
+        while (totalLength < stripLength)
         {
-            // Front
+            float buildingLength = Random.Range(10, 20);
+            if (totalLength + buildingLength > stripLength) break; // TODO: make it fit to the end
 
-            float length = Random.Range(10, 20);
+            Vector3 buildingPos = startPosition + direction.normalized * totalLength;
 
-            if (facadeLength + length > plotWidth) break; //length = facadeLength - length;
+            PlaceOfficeBuilding(buildingPos, buildingLength, angle);
 
-            Vector3 plotPos = plot.Position() * tileSize;
-            Vector3 plotStartPos = new Vector3(-plotWidth / 2, 0, -plotWidth / 2);
-
-            Vector3 posInPlot = plotStartPos + new Vector3(facadeLength, 0.3f, 0);
-
-            GameObject officeGO = Instantiate(buildingPrefab, plotPos + posInPlot, Quaternion.identity) as GameObject;
-            MeshXExample_Office office = officeGO.GetComponent<MeshXExample_Office>();
-
-            office.xWidth = length / office.xNum;
-            office.floors = Random.Range(3, 10);
-
-            facadeLength += length;
+            totalLength += buildingLength;
         }
+    }
 
-        facadeLength = 0;
+    void PlaceOfficeBuilding(Vector3 position, float width, float rotAngle)
+    {
+        GameObject officeGO = Instantiate(buildingPrefab, position, Quaternion.identity) as GameObject;
+        officeGO.transform.eulerAngles = new Vector3(0, rotAngle, 0);
 
-        while (facadeLength < plotWidth)
-        {
-            // Back
+        MeshXExample_Office office = officeGO.GetComponent<MeshXExample_Office>();
 
-            float length = Random.Range(10, 20);
-
-            if (facadeLength + length > plotWidth) break;
-
-            Vector3 plotPos = plot.Position() * tileSize;
-            Vector3 plotStartPos = new Vector3(plotWidth / 2, 0, plotWidth / 2);
-
-            Vector3 posInPlot = plotStartPos - new Vector3(facadeLength, 0.3f, 0);
-
-            GameObject officeGO = Instantiate(buildingPrefab, plotPos + posInPlot, Quaternion.identity) as GameObject;
-            officeGO.transform.eulerAngles = new Vector3(0, 180, 0);
-
-            MeshXExample_Office office = officeGO.GetComponent<MeshXExample_Office>();
-
-            office.xWidth = length / office.xNum;
-            office.floors = Random.Range(3, 10);
-
-            facadeLength += length;
-        }
+        office.xWidth = width / office.xNum;
+        office.floors = Random.Range(3, 10);
     }
 
     void DoStreets(Street[,] streets)
@@ -174,6 +162,8 @@ public class CityGen : MonoBehaviour
             streetGO.transform.position = street.Position() * tileSize;
         }
     }
+
+
 
     Shape GetShape(Plot plot)
     {
