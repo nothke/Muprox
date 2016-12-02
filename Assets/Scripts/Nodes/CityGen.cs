@@ -16,6 +16,8 @@ public class CityGen : MonoBehaviour
 
     void Start()
     {
+        Random.InitState(1);
+
         city = new City(tiles, tiles);
 
         Generate();
@@ -41,8 +43,9 @@ public class CityGen : MonoBehaviour
 
             Mesh quad = MeshX.Quad(Vector3.zero, tileSize - streetWidth, tileSize - streetWidth, Vector3.up);
             GameObject plotGO = gameObject.InitializeSeparateMesh(quad, plotMat);
+            plotGO.AddComponent<MeshCollider>();
 
-            plotGO.transform.position = plot.Position() * tileSize;
+            plotGO.transform.localPosition = plot.Position() * tileSize;
 
             PlaceBuildings(plot);
         }
@@ -57,7 +60,8 @@ public class CityGen : MonoBehaviour
             Mesh quad = MeshX.Quad(Vector3.zero, streetWidth, streetWidth, Vector3.up);
             GameObject cornerGO = gameObject.InitializeSeparateMesh(quad, cornerMat);
 
-            cornerGO.transform.position = corner.Position() * tileSize;
+            cornerGO.transform.localPosition = corner.Position() * tileSize;
+            cornerGO.AddComponent<MeshCollider>();
         }
 
         float dist = (tileSize - streetWidth) / 2;
@@ -97,13 +101,23 @@ public class CityGen : MonoBehaviour
 
     void PlaceOfficeBuilding(Vector3 position, float width, float rotAngle)
     {
-        GameObject officeGO = Instantiate(buildingPrefab, position, Quaternion.identity) as GameObject;
+        GameObject officeGO = Instantiate(buildingPrefab, Vector3.zero, Quaternion.identity) as GameObject;
+        officeGO.transform.parent = transform;
+
         officeGO.transform.eulerAngles = new Vector3(0, rotAngle, 0);
+        officeGO.transform.localPosition = position;
+
 
         MeshXExample_Office office = officeGO.GetComponent<MeshXExample_Office>();
 
+        office.xNum = Random.Range(3, 8);
+        office.zNum = Random.Range(2, 6);
         office.xWidth = width / office.xNum;
         office.floors = Random.Range(3, 10);
+        office.floorHeight = Random.Range(2.8f, 3.5f);
+        office.parapetHeight = Random.Range(0.3f, 2);
+
+
     }
 
     void DoStreets(Street[,] streets)
@@ -158,6 +172,7 @@ public class CityGen : MonoBehaviour
             }
 
             GameObject streetGO = gameObject.InitializeSeparateMesh(mesh, mat);
+            streetGO.AddComponent<MeshCollider>();
 
             streetGO.transform.position = street.Position() * tileSize;
         }
